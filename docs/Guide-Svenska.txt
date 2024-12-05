@@ -1,0 +1,37 @@
+Manual för QuickDB
+
+Introduktion
+
+QuickDB är en lättanvänd, inbyggd databas som kan inkluderas direkt i dina projekt utan behov av ytterligare installationer. Den är designad för att vara enkel och intuitiv, vilket gör den idealisk för både nybörjare och erfarna utvecklare. QuickDB kommer med färdigbyggt nätverksstöd för att möjliggöra fjärranslutningar och datahantering över nätverket.
+
+Funktioner
+
+QuickDB erbjuder följande grundläggande metoder:
+
+    GET: Hämta ett värde med hjälp av en nyckel.
+
+    SET: Spara ett värde med en specifik nyckel.
+
+    REMOVE: Ta bort ett värde med en given nyckel.
+
+    COMPARE: Jämför ett sparat värde med ett givet värde.
+
+Databasfunktioner
+Inom en databas klass finns följande funktioner:
+
+load: Denna funktion öppnar en fil, läser innehållet och sparar det i en unordered map (en typ av datatyp).
+
+save: Denna funktion läser innehållet i unordered map och sparar det i en fil.
+
+connect: Denna funktion öppnar en server för att kunna hantera olika förfrågningar (requests).
+
+cmdArgs: Denna funktion jämför en given input med de fyra huvudfunktionerna. Om en match finns, körs den matchande funktionen.
+
+set: Denna funktion lägger till en användare i unordered map om användaren inte redan finns.
+
+get: Denna funktion hämtar en användares lösenord från databasen.
+
+remove: Denna funktion hittar och tar bort en användare från databasen.
+
+compare: Denna funktion jämför en användare och lösenord med de som finns i databasen. Om en match hittas, returnerar funktionen true, annars false.
+
