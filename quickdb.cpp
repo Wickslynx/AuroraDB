@@ -32,8 +32,8 @@ private:
 public:
     Database() {
         try {
-            load("/workspaces/codespaces-blank/Database/storage.txt"); // Runs loading method.
-            connect(8080);
+            load("storage.txt"); // Runs loading method.
+            // connect(8080); //Uncomment to set networking to default start mode.
         } catch (const std::runtime_error &e) {
             std::cerr << "Error loading database: " << e.what() << "\n"; // If error, send error message.
         }
@@ -41,7 +41,7 @@ public:
 
     ~Database() {
         try {
-            save("/workspaces/codespaces-blank/Database/storage.txt");
+            save("storage.txt");
         } catch (const std::runtime_error &e) {
             std::cerr << "Error saving database: " << e.what() << "\n"; // If error, send error message.
         }
