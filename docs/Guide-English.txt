@@ -1,1 +1,26 @@
+Introduction
+
+QuickDB is an easy-to-use, embedded database that can be integrated directly into your projects without the need for additional installations. It is designed to be simple and intuitive, making it ideal for both beginners and experienced developers. QuickDB comes with built-in network support to enable remote connections and data management over the network.
+
+Features
+
+QuickDB provides the following basic methods:
+
+    GET: Retrieve a value using a key.
+    SET: Save a value with a specific key.
+    REMOVE: Delete a value with a given key.
+    COMPARE: Compare a saved value with a given value.
+
+Database functions:
+
+Within a database class, the following functions are available:
+
+    load: This function opens a file, reads the contents, and saves them into an unordered map (a type of data structure).
+    save: This function reads the contents of the unordered map and saves it into a file.
+    connect: This function opens a server to handle different requests.
+    cmdArgs: This function compares a given input with the four main functions. If a match is found, the corresponding function is executed.
+    set: This function adds a user to the unordered map if the user does not already exist.
+    get: This function retrieves a user's password from the database.
+    remove: This function locates and removes a user from the database.
+    compare: This function compares a user and password with those stored in the database. If a match is found, the function returns true; otherwise, it returns false.
 
