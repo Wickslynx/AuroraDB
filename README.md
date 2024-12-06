@@ -1,4 +1,4 @@
-# QuickDB 
+# AuroraDB
 ***Version 1.1***
 
 AuroraDB is an easy-to-use, embedded database that can be integrated directly into your projects without the need for additional installations. 
