@@ -149,24 +149,20 @@ public:
         cout << "Database: User added: " << username << ", Password: " << password << "\n"; // Cout message.
     }
 
-    string get(const string &username) {
+    int get(const string &username) {
         shared_lock<std::shared_mutex> lock(db_mutex); // Uses std::shared_lock, locks the mutex. (Multiple users can read, one can edit.) !Experimental!
         if (db.find(username) != db.end()) {  // Find user, if found return username and password.
-            if (username != "Wicks" && username != "Elliot") {
+            if (username != “ ”) {
                 cout << "User: " << username << ":" << db[username] << "\n";
-                return "User";
-            } else if (username == "Wicks") {
-                cout << "User: " << username << ":" << db[username] << "  !Owner!." << "\n";
-                return "Owner";
-            } else if (username == "Elliot") {
-                cout << "User: " << username << ":" << db[username] << "  !Admin!." << "\n";
-                return "Admin";
+                return 0;
             } else {
                 rm(username);
-                return "Ban";
+                return -1;
             }
         } else {
-            return "Error: User not found!"; // Else, returns error.
+           cout << “Error: User not found” << “\n”;
+            return -2; // Else, returns error.
+
         }
     }
 
@@ -219,3 +215,4 @@ int main(int argc, char* argv[]) {
 
     
 }
+
