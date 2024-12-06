@@ -1,10 +1,12 @@
 Introduction
 
-QuickDB is an easy-to-use, embedded database that can be integrated directly into your projects without the need for additional installations. It is designed to be simple and intuitive, making it ideal for both beginners and experienced developers. QuickDB comes with built-in network support to enable remote connections and data management over the network.
+AuroraDB is an easy-to-use, embedded database that can be integrated directly into your projects without the need for additional installations. 
+It is designed to be simple and intuitive, making it ideal for both beginners and experienced developers. 
+AurorakDB comes with built-in network support to enable remote connections and data management over the network.
 
 Features
 
-QuickDB provides the following basic methods:
+AuroraDB provides the following basic methods:
 
     GET: Retrieve a value using a key.
     SET: Save a value with a specific key.
