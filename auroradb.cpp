@@ -23,14 +23,14 @@ using std::shared_lock;
 using std::string;
 using std::unique_lock; 
 
-class Database {
+class AuroraDB {
 private:
     std::unordered_map<string, string> db;     // Starts unordered map.
     std::unordered_map<string, string> buffer; // Starts a buffer to load data into.
     std::shared_mutex db_mutex;                // Starts a mutex that's called "db_mutex".
 
 public:
-    Database() {
+    AuroraDB() {
         try {
             load("storage.txt"); // Runs loading method.
             // connect(8080); //Uncomment to set networking to default start mode.
@@ -39,7 +39,7 @@ public:
         }
     }
 
-    ~Database() {
+    ~AuroraDB() {
         try {
             save("storage.txt");
         } catch (const std::runtime_error &e) {
@@ -210,7 +210,7 @@ public:
 };
 
 int main(int argc, char* argv[]) {
-    Database db;
+    Aurora db;
     db.cmdArgs(argc, argv);
     // Database supports multiple different solutions, both command line arguments, networking and you can write commands under here: (Modified version has interactive menu.)
     // Threading is being worked on, you see different code parts that support it.
