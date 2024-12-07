@@ -217,7 +217,7 @@ public:
 };
 
 int main(int argc, char* argv[]) {
-    Aurora db;
+    AuroraDB db;
     db.cmdArgs(argc, argv);
     // Database supports multiple different solutions, both command line arguments, networking and you can write commands under here: (Modified version has interactive menu.)
     // Threading is being worked on, you see different code parts that support it.
