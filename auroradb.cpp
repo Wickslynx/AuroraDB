@@ -13,6 +13,7 @@
 #include <vector>
 #include <functional>
 #include <algorithm>     // Added for additional string and algorithm functions
+#include <cstring>
 
 // Define, the best thing in C++.
 #define ERROR_MSG(string) (std::cerr << "ERROR!: " << string << std::endl)
@@ -121,7 +122,7 @@ private:
         }
 
         sockaddr_in serverAddress;
-        std::memset(&serverAddress, 0, sizeof(serverAddress));
+        memset(&serverAddress, 0, sizeof(serverAddress));
         serverAddress.sin_family = AF_INET;         //Use TCP
         serverAddress.sin_port = htons(port);       // Set port to 8080.
         serverAddress.sin_addr.s_addr = INADDR_ANY; // Change to accept only one IP.
