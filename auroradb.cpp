@@ -10,7 +10,8 @@
 #include <unistd.h>      // For networking.
 #include <stdexcept>     // For all error, Will be replaced and removed soon..
 #include <sstream>       // For getting strings.
-#include <vector>  
+#include <vector>
+#include <functional>
 
 // Define, the best thing in C++.
 #define error(string) (std::cout << "ERROR!: " << string << "\n")
@@ -113,6 +114,14 @@ public:
         close(serverSocket);
     }
 
+    std::string hash(const std::string &input) {
+    std::hash<std::string> hasher; //Declare the hasher.
+    size_t hashed_value = hasher(input); //Hash the input.
+    return std::to_string(hashed_value);  //return the hashed value.
+}
+
+    }
+
     //----------------------------------------------------------------------------------------------------------------------------------------------
     void cmdArgs(int argc, char *argv[]) {
         if (argc > 1 && argc < 5) {  // If argument is under 4 and over 1.
@@ -145,14 +154,14 @@ public:
     //-----------------------------------------------------------------------------------------------------------------------------------------------
     void set(const string &username, const string &password) {
         unique_lock<std::shared_mutex> lock(db_mutex);                                      // Uses std::unique_lock, locks the mutex. (One user can edit at a time.) !Experimental!
-        db[username] = password;                                                            // Adds user to database.
+        db[username] = hash(password);                                                            // Adds user to database.
         cout << "Database: User added: " << username << ", Password: " << password << "\n"; // Cout message.
     }
 
     int get(const string &username) {
-        shared_lock<std::shared_mutex> lock(db_mutex); // Uses std::shared_lock, locks the mutex. (Multiple users can read, one can edit.) !Experimental!
-        if (db.find(username) != db.end()) {  // Find user, if found return username and password.
-            if (username != “ ”) {
+        shared_lock<std::shared_mutex> lock(db_mutex);
+        if (db.find(username) != db.end()) {
+            if (username != " ") {
                 cout << "User: " << username << ":" << db[username] << "\n";
                 return 0;
             } else {
@@ -160,22 +169,21 @@ public:
                 return -1;
             }
         } else {
-           cout << “Error: User not found” << “\n”;
-            return -2; // Else, returns error.
-
+           cout << "Error: User not found\n";
+            return -2;
         }
     }
 
     void thread(const string &function, const string &name, const string &password) {
         std::vector<std::thread> threads; // Starts threading vector.
         if (function == "get") {
-            threads.emplace_back(&Database::get, this, name); // If function get, start thread. (calls get in a thread)
+            threads.emplace_back(&AuroraDB::get, this, name); // If function get, start thread. (calls get in a thread)
         } else if (function == "set") {
-            threads.emplace_back(&Database::set, this, name, password); // If function set, start thread. (calls set in a thread)
+            threads.emplace_back(&AuroraDB::set, this, name, password); // If function set, start thread. (calls set in a thread)
         } else if (function == "rm") {
-            threads.emplace_back(&Database::rm, this, name); // If function rm, start thread. (calls rm in a thread.)
+            threads.emplace_back(&AuroraDB::rm, this, name); // If function rm, start thread. (calls rm in a thread.)
         } else if (function == "compare") {
-            threads.emplace_back(&Database::compare, this, name, password); // If function compare, start thread. (calls compare in a thread.)
+            threads.emplace_back(&AuroraDB::compare, this, name, password); // If function compare, start thread. (calls compare in a thread.)
         } else {
             throw std::runtime_error("Oooops, something went wrong, try again."); // If an error occurs, throw an error.
         }
@@ -189,7 +197,7 @@ public:
     bool compare(const string &username, const string &password) {
         shared_lock<std::shared_mutex> lock(db_mutex); // Uses shared_lock, multiple threads can read at the same time.
         auto it = db.find(username);                   // Declare variable.
-        if (it != db.end() && it->second == password) {  // If user is found.
+        if (it != db.end() && it->second == hash(password)) {  // If user is found.
             cout << "Password matched for user: " << username << "\n"; // Print success message.
             return true; // Return true.
         } else {
