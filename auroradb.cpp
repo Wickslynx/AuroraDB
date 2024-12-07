@@ -30,24 +30,16 @@ private:
     std::unordered_map<string, string> buffer; // Starts a buffer to load data into.
     std::shared_mutex db_mutex;                // Starts a mutex that's called "db_mutex".
 
-public:
-    AuroraDB() {
-        try {
-            load("storage.txt"); // Runs loading method.
-            // connect(8080); //Uncomment to set networking to default start mode.
-        } catch (const std::runtime_error &e) {
-            std::cerr << "Error loading database: " << e.what() << "\n"; // If error, send error message.
-        }
+    //----------------------------------------------------------------------------------------------------------------------------------------------
+    //Internal function defenitions.
+    std::string hash(const std::string &input) {
+        std::hash<std::string> hasher; //Declare the hasher.
+        size_t hashed_value = hasher(input); //Hash the input.
+        return std::to_string(hashed_value);  //return the hashed value.
     }
 
-    ~AuroraDB() {
-        try {
-            save("storage.txt");
-        } catch (const std::runtime_error &e) {
-            std::cerr << "Error saving database: " << e.what() << "\n"; // If error, send error message.
-        }
-    }
-    //---------------------------------------------------------------------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------------------------------------------------------------------------
+
     void load(const string &file) {
         std::ifstream inputFile(file); // Opens file in "read" mode.
         if (!inputFile) {
@@ -69,9 +61,10 @@ public:
             outfile << pair.first << " " << pair.second << "\n"; // For items in db, pair item into file. (pair.first:pair.second)
         }
     }
+
     //----------------------------------------------------------------------------------------------------------------------------------------------
 
-    void connect(const int &port) {
+     void connect(const int &port) {
         int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
         bool quit = false;
         sockaddr_in serverAddress;
@@ -113,14 +106,25 @@ public:
 
         close(serverSocket);
     }
-    void hash(string& input) {
-        std::string hash(const std::string &input) {
-        std::hash<std::string> hasher; //Declare the hasher.
-        size_t hashed_value = hasher(input); //Hash the input.
-        return std::to_string(hashed_value);  //return the hashed value.
-    }
-   
 
+public:
+    AuroraDB() {
+        try {
+            load("storage.txt"); // Runs loading method.
+            // connect(8080); //Uncomment to set networking to default start mode.
+        } catch (const std::runtime_error &e) {
+            std::cerr << "Error loading database: " << e.what() << "\n"; // If error, send error message.
+        }
+    }
+
+    ~AuroraDB() {
+        try {
+            save("storage.txt");
+        } catch (const std::runtime_error &e) {
+            std::cerr << "Error saving database: " << e.what() << "\n"; // If error, send error message.
+        }
+    }
+  
     //----------------------------------------------------------------------------------------------------------------------------------------------
     void cmdArgs(int argc, char *argv[]) {
         if (argc > 1 && argc < 5) {  // If argument is under 4 and over 1.
@@ -173,7 +177,7 @@ public:
         }
     }
 
-    void Thread(const string &function, const string &name, const string &password) {
+    void thread(const string &function, const string &name, const string &password) {
     std::vector<std::thread> threads;
     if (function == "get") {
         threads.emplace_back(&AuroraDB::get, this, name);
