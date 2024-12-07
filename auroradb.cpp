@@ -179,13 +179,13 @@ public:
     void Thread(const string &function, const string &name, const string &password) {
     std::vector<std::thread> threads;
     if (function == "get") {
-        threads.emplace_back(&AuroraDB::get, this, name);
+        threads.emplace_back(&get, this, name);
     } else if (function == "set") {
-        threads.emplace_back(&AuroraDB::set, this, name, password);
+        threads.emplace_back(&set, this, name, password);
     } else if (function == "rm") {
-        threads.emplace_back(&AuroraDB::rm, this, name);
+        threads.emplace_back(&rm, this, name);
     } else if (function == "compare") {
-        threads.emplace_back(&AuroraDB::compare, this, name, password);
+        threads.emplace_back(&compare, this, name, password);
     } else {
         throw std::runtime_error("Oooops, something went wrong, try again.");
     }
