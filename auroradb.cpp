@@ -114,15 +114,12 @@ public:
         close(serverSocket);
     }
     void hash(string& input) {
-            std::string hash(const std::string &input) {
+        std::string hash(const std::string &input) {
         std::hash<std::string> hasher; //Declare the hasher.
         size_t hashed_value = hasher(input); //Hash the input.
         return std::to_string(hashed_value);  //return the hashed value.
     }
    
-}
-
-    }
 
     //----------------------------------------------------------------------------------------------------------------------------------------------
     void cmdArgs(int argc, char *argv[]) {
@@ -179,13 +176,13 @@ public:
     void Thread(const string &function, const string &name, const string &password) {
     std::vector<std::thread> threads;
     if (function == "get") {
-        threads.emplace_back(&get, this, name);
+        threads.emplace_back(&AuroraDB::get, this, name);
     } else if (function == "set") {
-        threads.emplace_back(&set, this, name, password);
+        threads.emplace_back(&AuroraDB::set, this, name, password);
     } else if (function == "rm") {
-        threads.emplace_back(&rm, this, name);
+        threads.emplace_back(&AuroraDB::rm, this, name);
     } else if (function == "compare") {
-        threads.emplace_back(&compare, this, name, password);
+        threads.emplace_back(&AuroraDB::compare, this, name, password);
     } else {
         throw std::runtime_error("Oooops, something went wrong, try again.");
     }
