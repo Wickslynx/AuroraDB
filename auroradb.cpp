@@ -279,13 +279,13 @@ public:
         std::vector<std::thread> threads;
         try {
             if (function == "get") {
-                threads.emplace_back(&AuroraDB::get, this, name);
+                threads.emplace_back(std::thread(&AuroraDB::get, this, name));
             } else if (function == "set") {
-                threads.emplace_back(&AuroraDB::set, this, name, password);
+                threads.emplace_back(std::thread(&AuroraDB::set, this, name, password));
             } else if (function == "rm") {
-                threads.emplace_back(&AuroraDB::rm, this, name);
+                threads.emplace_back(std::thread(&AuroraDB::rm, this, name));
             } else if (function == "compare") {
-                threads.emplace_back(&AuroraDB::compare, this, name, password);
+                threads.emplace_back(std::thread(&AuroraDB::compare, this, name, password));
             } else {
                 throw std::runtime_error("Unknown thread function");
             }
