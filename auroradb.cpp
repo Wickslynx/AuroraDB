@@ -118,7 +118,7 @@ private:
     }
 
 
-    public:
+public:
     AuroraDB() {
         try {
             load("storage.txt"); // Runs loading method.
