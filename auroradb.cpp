@@ -31,6 +31,7 @@ class AuroraDB {
 private:
     std::unordered_map<string, string> db;     // Starts unordered map.
     std::unordered_map<string, string> buffer; // Starts a buffer to load data into.
+    std::unordered_map<string, bool> tags;     //Creates unordered map to set tags.
     std::unordered_map<string, std::vector<std::pair<string, string>>> tagged_users; //Starts a map to load the users with the same tag into.
     std::shared_mutex db_mutex;                // Starts a mutex that's called "db_mutex".
     string current_tag = "default";            // Added to track current tag
@@ -115,6 +116,8 @@ private:
 
         outfile.close(); // Close the file.
     }
+
+
     public:
     AuroraDB() {
         try {
@@ -234,18 +237,26 @@ private:
         }
     }
     //-----------------------------------------------------------------------------------------------------------------------------------------------
-    void set(const string &username, const string &password) {
+    void set(const string tag, const string &username, const string &password) {
+        if (tags.find(tag) != tags.end()) {
+            ERROR_MSG("Tag dosen't exist, please create it using addTag()"); //Prevent non exsisnt tags.
+        }
+        
         // Prevent empty or whitespace-only usernames
         if (username.empty() || std::all_of(username.begin(), username.end(), ::isspace)) {
             cerr << "Error: Username cannot be empty\n";
             return;
         }
 
-        unique_lock<std::shared_mutex> lock(db_mutex);                                      
-        db[current_tag + ":" + username] = hash(password);                                                            
+        unique_lock<std::shared_mutex> lock(db_mutex);   
+        
+        db[tag + ":" + username] = hash(password);                                                            
         cout << "Database: User added: " << username << "\n"; 
     }
 
+    void set(const string &username, const string &password) { 
+        set("default", username, password); //Set the tag to default tag.
+    }
 
     int get(const string &username) {
         if (username.empty()) {
