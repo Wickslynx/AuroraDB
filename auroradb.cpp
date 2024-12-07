@@ -12,14 +12,16 @@
 #include <sstream>       // For getting strings.
 #include <vector>
 #include <functional>
+#include <algorithm>     // Added for additional string and algorithm functions
 
 // Define, the best thing in C++.
-#define error(string) (std::cout << "ERROR!: " << string << "\n")
-#define ServerMessage(input, socket) (const char* message = input; send(socket, message, strlen(message), 0);)
+#define ERROR_MSG(string) (std::cerr << "ERROR!: " << string << std::endl)
+#define ServerMessage(input, socket) (const char* message = input; send(socket, message, strlen(message), 0))
 
 // All using statements (Makes my life easier.)
 using std::cin;
 using std::cout;
+using std::cerr;
 using std::shared_lock;
 using std::string;
 using std::unique_lock; 
@@ -28,10 +30,11 @@ class AuroraDB {
 private:
     std::unordered_map<string, string> db;     // Starts unordered map.
     std::unordered_map<string, string> buffer; // Starts a buffer to load data into.
+    std::unordered_map<string, std::vector<std::pair<string, string>>> tagged_users; //Starts a map to load the users with the same tag into.
     std::shared_mutex db_mutex;                // Starts a mutex that's called "db_mutex".
 
     //----------------------------------------------------------------------------------------------------------------------------------------------
-    //Internal function defenitions.
+    //Internal function definitions.
     std::string hash(const std::string &input) {
         std::hash<std::string> hasher; //Declare the hasher.
         size_t hashed_value = hasher(input); //Hash the input.
@@ -46,64 +49,136 @@ private:
             throw std::runtime_error("Error opening file for loading."); // If error, send error message.
         }
 
+        string line;
+        string current_tag = "default"; // Js use default tag if no tag specified... ..
+
+        // First, look for the tag
+        if (std::getline(inputFile, line)) {
+            if (line.substr(0, 12) == "<AuroraDB::") {
+                // Get tag name between <AuroraDB::  and >. 
+                size_t start = line.find("-") + 2;
+                size_t end = line.find(">", start);
+                if (start != string::npos && end != string::npos) {
+                    current_tag = line.substr(start, end - start); //Set the current_tag to the tag.
+                }
+            } else {
+                inputFile.seekg(0); //If no tag, set it to the beginning.
+            }
+        }
+
         string username, password; // Declares username and password.
+            
         while (inputFile >> username >> password) {  // While able to read data.
-            db[username] = password; // Add user to database.
+            if (username == "</AuroraDB>") break; //check for the closing, tag: Break.
+
+            // Sanitize input to prevent injection
+            if (!username.empty() && !password.empty()) {
+                db[current_tag + ":" + username] = hash(password); // Add user to database with the tag.
+            }
         }
     }
 
     void save(const string &filename) {
         std::ofstream outfile(filename, std::ios::out); // Open file in "out" mode.
+        
         if (!outfile.is_open()) {
             throw std::runtime_error("Error opening file for saving."); // If error, send error message.
         }
+
+        std::unordered_map<string, std::vector<std::pair<string, string>>> tagged_users; // Group users by their database tag.
+        
         for (const auto &pair : db) {
-            outfile << pair.first << " " << pair.second << "\n"; // For items in db, pair item into file. (pair.first:pair.second)
+            size_t tag_separator = pair.first.find(':');  // Split the key into tag and username
+            
+            if (tag_separator != string::npos) {
+                string tag = pair.first.substr(0, tag_separator);
+                string username = pair.first.substr(tag_separator + 1);
+                tagged_users[tag].emplace_back(username, pair.second);
+            }
+        }
+
+        // Write each database tag group
+        for (const auto &tag_group : tagged_users) {
+            // Write tag at the beginning of the user list
+            outfile << "<AuroraDB::" << tag_group.first << "> -\n";
+            
+            // Write users in this tag group
+            for (const auto &user : tag_group.second) {
+                outfile << user.first << " " << user.second << "\n";
+            }
+            
+            // Close the tag
+            outfile << "</AuroraDB>\n\n";
         }
     }
 
     //----------------------------------------------------------------------------------------------------------------------------------------------
 
-     void connect(const int &port) {
+    void connect(const int &port) {
         int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-        bool quit = false;
-        sockaddr_in serverAddress;
-        serverAddress.sin_family = AF_INET;         //Use TCP
-        serverAddress.sin_port = htons(port);      // Set port to 8080.
-        serverAddress.sin_addr.s_addr = INADDR_ANY;         // Change to accept only one IP.
+        if (serverSocket < 0) {
+            throw std::runtime_error("Failed to create socket");
+        }
 
-        bind(serverSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
-        listen(serverSocket, 10000);
+        sockaddr_in serverAddress;
+        std::memset(&serverAddress, 0, sizeof(serverAddress));
+        serverAddress.sin_family = AF_INET;         //Use TCP
+        serverAddress.sin_port = htons(port);       // Set port to 8080.
+        serverAddress.sin_addr.s_addr = INADDR_ANY; // Change to accept only one IP.
+
+        if (bind(serverSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) < 0) {
+            close(serverSocket);
+            throw std::runtime_error("Failed to bind socket");
+        }
+
+        if (listen(serverSocket, 10000) < 0) {
+            close(serverSocket);
+            throw std::runtime_error("Failed to listen on socket");
+        }
 
         int clientSocket = accept(serverSocket, nullptr, nullptr);
+        if (clientSocket < 0) {
+            close(serverSocket);
+            throw std::runtime_error("Failed to accept client connection");
+        }
 
+        bool quit = false;
         while (!quit) {
-
             char buffer[1024] = {0};
-            recv(clientSocket, buffer, sizeof(buffer), 0);
+            ssize_t bytesReceived = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
+            
+            if (bytesReceived <= 0) {
+                break; // Connection closed or error
+            }
+
+            buffer[bytesReceived] = '\0'; // Null-terminate the received data
 
             std::string command, name, password;
             std::istringstream stream(buffer);
-            try {
-                stream >> command >> name >> password;
-            } catch (const std::runtime_error &e) {
-                throw std::runtime_error(e.what());
+            
+            if (!(stream >> command >> name >> password)) {
+                ERROR_MSG("Invalid command format");
+                continue;
             }
-            if (buffer[0] == '\0') {
-                throw std::runtime_error("String was empty.");
-            } else if (command == "get") {
-                thread("get", name, password);
-            } else if (command == "set") {
-                thread("set", name, password);
-            } else if (command == "compare") {
-                thread("compare", name, password); // Send message to server, Used for debugging.
-            } else if (command == "quit") {
-                break;
-            } else {
-                std::cout << "Error: " << buffer << "\n";
+
+            try {
+                if (command == "get") {
+                    thread("get", name, password);
+                } else if (command == "set") {
+                    thread("set", name, password);
+                } else if (command == "compare") {
+                    thread("compare", name, password);
+                } else if (command == "quit") {
+                    quit = true;
+                } else {
+                    ERROR_MSG("Unknown command: " + command);
+                }
+            } catch (const std::exception& e) {
+                ERROR_MSG(e.what());
             }
         }
 
+        close(clientSocket);
         close(serverSocket);
     }
 
@@ -113,7 +188,7 @@ public:
             load("storage.txt"); // Runs loading method.
             // connect(8080); //Uncomment to set networking to default start mode.
         } catch (const std::runtime_error &e) {
-            std::cerr << "Error loading database: " << e.what() << "\n"; // If error, send error message.
+            cerr << "Error loading database: " << e.what() << "\n";
         }
     }
 
@@ -121,7 +196,7 @@ public:
         try {
             save("storage.txt");
         } catch (const std::runtime_error &e) {
-            std::cerr << "Error saving database: " << e.what() << "\n"; // If error, send error message.
+            cerr << "Error saving database: " << e.what() << "\n";
         }
     }
   
@@ -135,70 +210,85 @@ public:
                 password = (argc > 3) ? argv[3] : ""; // Assign password to argv[3].
 
                 if (cmd == "get" && argc > 2) {
-                    cout << get(name) << "\n"; // If cmd is get and two arguments have been given, print the get method.
+                    cout << (get(name) == 0 ? "Get successful" : "Get failed") << "\n";
                 } else if (cmd == "set" && argc > 3) {
-                    set(name, password); // Else if cmd is set and three arguments have been given, add user to database.
+                    set(name, password);
                 } else if (cmd == "rm" && argc > 2) {
-                    rm(name); // Else if cmd is rm and two arguments have been given, remove user from database.
+                    rm(name);
                 } else if (cmd == "compare" && argc > 3) {
-                    compare(name, password); // Else if cmd is compare and three arguments have been given, compare user.
-                } else { // Else, throw error.
+                    compare(name, password);
+                } else {
                     throw std::runtime_error("Error: Must use (set (Name, Password), get (Name), rm (Name), compare (Name, Password))");
                 }
             } catch (std::runtime_error &e) {
-                std::cout << "Error: Argument not recognised: " << e.what() << "\n"; // If error, throw runtime_error.
+                cerr << "Error: Argument not recognised: " << e.what() << "\n";
             }
         } else if (argc > 4) {
-            cout << "Error: Arguments exceeding limit, maximum of three arguments."; // Arguments exceeding limit, cout error.
+            cerr << "Error: Arguments exceeding limit, maximum of three arguments.\n";
         } else {
-            cout << "No command line arguments given. " << argc << std::endl; // No arguments given, cout warning and continue.
+            cout << "No command line arguments given. Total arguments: " << argc << std::endl;
         }
     }
     //-----------------------------------------------------------------------------------------------------------------------------------------------
     void set(const string &username, const string &password) {
-        unique_lock<std::shared_mutex> lock(db_mutex);                                      // Uses std::unique_lock, locks the mutex. (One user can edit at a time.) !Experimental!
-        db[username] = hash(password);                                                            // Adds user to database.
-        cout << "Database: User added: " << username << ", Password: " << password << "\n"; // Cout message.
+        // Prevent empty or whitespace-only usernames
+        if (username.empty() || std::all_of(username.begin(), username.end(), ::isspace)) {
+            cerr << "Error: Username cannot be empty\n";
+            return;
+        }
+
+        unique_lock<std::shared_mutex> lock(db_mutex);                                      
+        db[username] = hash(password);                                                            
+        cout << "Database: User added: " << username << "\n"; 
     }
 
     int get(const string &username) {
+        if (username.empty()) {
+            cerr << "Error: Username cannot be empty\n";
+            return -1;
+        }
+
         shared_lock<std::shared_mutex> lock(db_mutex);
-        if (db.find(username) != db.end()) {
-            if (username != " ") {
-                cout << "User: " << username << ":" << db[username] << "\n";
-                return 0;
-            } else {
-                rm(username);
-                return -1;
-            }
+        auto it = db.find(username);
+        if (it != db.end()) {
+            cout << "User: " << username << ":" << it->second << "\n";
+            return 0;
         } else {
-           cout << "Error: User not found\n";
+            cout << "Error: User not found\n";
             return -2;
         }
     }
 
     void thread(const string &function, const string &name, const string &password) {
-    std::vector<std::thread> threads;
-    if (function == "get") {
-        threads.emplace_back(&AuroraDB::get, this, name);
-    } else if (function == "set") {
-        threads.emplace_back(&AuroraDB::set, this, name, password);
-    } else if (function == "rm") {
-        threads.emplace_back(&AuroraDB::rm, this, name);
-    } else if (function == "compare") {
-        threads.emplace_back(&AuroraDB::compare, this, name, password);
-    } else {
-        throw std::runtime_error("Oooops, something went wrong, try again.");
-    }
+        std::vector<std::thread> threads;
+        try {
+            if (function == "get") {
+                threads.emplace_back(&AuroraDB::get, this, name);
+            } else if (function == "set") {
+                threads.emplace_back(&AuroraDB::set, this, name, password);
+            } else if (function == "rm") {
+                threads.emplace_back(&AuroraDB::rm, this, name);
+            } else if (function == "compare") {
+                threads.emplace_back(&AuroraDB::compare, this, name, password);
+            } else {
+                throw std::runtime_error("Unknown thread function");
+            }
 
-    for (auto &t : threads) {
-        t.join();
+            for (auto &t : threads) {
+                t.join();
+            }
+        } catch (const std::exception& e) {
+            cerr << "Thread error: " << e.what() << "\n";
+        }
     }
-}
-
 
     //----------------------------------------------------------------------------------------------------------------------------------------------
     bool compare(const string &username, const string &password) {
+        if (username.empty() || password.empty()) {
+            cerr << "Error: Username and password cannot be empty\n";
+            return false;
+        }
+
         shared_lock<std::shared_mutex> lock(db_mutex); // Uses shared_lock, multiple threads can read at the same time.
         auto it = db.find(username);                   // Declare variable.
         if (it != db.end() && it->second == hash(password)) {  // If user is found.
@@ -211,20 +301,32 @@ public:
     }
 
     void rm(const string &username) {
+        if (username.empty()) {
+            cerr << "Error: Username cannot be empty\n";
+            return;
+        }
+
         unique_lock<std::shared_mutex> lock(db_mutex); // Locks the db.
-        db.erase(username);                            // Erases user from database.
-        cout << "User removed: " << username << "\n";  // Outputs message.
+        size_t removed = db.erase(username);            // Erases user from database.
+        if (removed > 0) {
+            cout << "User removed: " << username << "\n";  // Outputs message.
+        } else {
+            cout << "User not found: " << username << "\n";
+        }
     }
 };
 
 int main(int argc, char* argv[]) {
-    AuroraDB db;
-    db.cmdArgs(argc, argv);
+    try {
+        AuroraDB db;
+        db.cmdArgs(argc, argv);
+    } catch (const std::exception& e) {
+        cerr << "Unhandled exception: " << e.what() << "\n";
+        return 1;
+    }
+    
     // Database supports multiple different solutions, both command line arguments, networking and you can write commands under here: (Modified version has interactive menu.)
     // Threading is being worked on, you see different code parts that support it.
     // Have fun, greetings Wicks.
     return 0;
-
-    
 }
-
