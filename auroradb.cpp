@@ -13,7 +13,7 @@
 #include <vector>
 #include <functional>
 #include <algorithm>     // Added for additional string and algorithm functions
-#include <cstring>
+#include <cstring>       // Added for memset
 
 // Define, the best thing in C++.
 #define ERROR_MSG(string) (std::cerr << "ERROR!: " << string << std::endl)
@@ -33,6 +33,7 @@ private:
     std::unordered_map<string, string> buffer; // Starts a buffer to load data into.
     std::unordered_map<string, std::vector<std::pair<string, string>>> tagged_users; //Starts a map to load the users with the same tag into.
     std::shared_mutex db_mutex;                // Starts a mutex that's called "db_mutex".
+    string current_tag = "default";            // Added to track current tag
 
     //----------------------------------------------------------------------------------------------------------------------------------------------
     //Internal function definitions.
@@ -47,46 +48,43 @@ private:
     void load(const string &file) {
         std::ifstream inputFile(file); // Opens file in "read" mode.
         if (!inputFile) {
-            throw std::runtime_error("Error opening file for loading."); // If error, send error message.
+            // If file doesn't exist, just return silently
+            return;
         }
 
         string line;
-        string current_tag = "default"; // Js use default tag if no tag specified... ..
+        current_tag = "default"; // Reset to default tag
 
         // First, look for the tag
-        if (std::getline(inputFile, line)) {
+        while (std::getline(inputFile, line)) {
             if (line.substr(0, 12) == "<AuroraDB::") {
-                // Get tag name between <AuroraDB::  and >. 
+                // Extract tag name between <AuroraDB::-  and -> 
                 size_t start = line.find("-") + 2;
                 size_t end = line.find(">", start);
                 if (start != string::npos && end != string::npos) {
                     current_tag = line.substr(start, end - start); //Set the current_tag to the tag.
                 }
-            } else {
-                inputFile.seekg(0); //If no tag, set it to the beginning.
-            }
-        }
-
-        string username, password; // Declares username and password.
-            
-        while (inputFile >> username >> password) {  // While able to read data.
-            if (username == "</AuroraDB>") break; //check for the closing, tag: Break.
-
-            // Sanitize input to prevent injection
-            if (!username.empty() && !password.empty()) {
-                db[current_tag + ":" + username] = hash(password); // Add user to database with the tag.
+            } else if (!line.empty()) {
+                // Parse username and password
+                std::istringstream iss(line);
+                string username, password;
+                if (iss >> username >> password) {
+                    // Store with tag
+                    db[current_tag + ":" + username] = password;
+                }
             }
         }
     }
 
     void save(const string &filename) {
-        std::ofstream outfile(filename, std::ios::out); // Open file in "out" mode.
+        std::ofstream outfile(filename, std::ios::out | std::ios::trunc); // Open file in "out" mode and truncate
         
         if (!outfile.is_open()) {
-            throw std::runtime_error("Error opening file for saving."); // If error, send error message.
+            throw std::runtime_error("Error opening file for saving.");
         }
 
-        std::unordered_map<string, std::vector<std::pair<string, string>>> tagged_users; // Group users by their database tag.
+        // Group users by their database tag
+        std::unordered_map<string, std::vector<std::pair<string, string>>> tagged_users;
         
         for (const auto &pair : db) {
             size_t tag_separator = pair.first.find(':');  // Split the key into tag and username
@@ -108,14 +106,19 @@ private:
                 outfile << user.first << " " << user.second << "\n";
             }
             
-            // Close the tag
-            outfile << "</AuroraDB>\n\n";
+
+            outfile << "</AuroraDB>\n\n"; 
         }
+
+        outfile.flush();  // Flush.
+        
+
+        outfile.close(); // Close the file.
     }
 
-    //----------------------------------------------------------------------------------------------------------------------------------------------
+     //----------------------------------------------------------------------------------------------------------------------------------------------
 
-    void connect(const int &port) {
+     void connect(const int &port) {
         int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
         if (serverSocket < 0) {
             throw std::runtime_error("Failed to create socket");
@@ -183,24 +186,6 @@ private:
         close(serverSocket);
     }
 
-public:
-    AuroraDB() {
-        try {
-            load("storage.txt"); // Runs loading method.
-            // connect(8080); //Uncomment to set networking to default start mode.
-        } catch (const std::runtime_error &e) {
-            cerr << "Error loading database: " << e.what() << "\n";
-        }
-    }
-
-    ~AuroraDB() {
-        try {
-            save("storage.txt");
-        } catch (const std::runtime_error &e) {
-            cerr << "Error saving database: " << e.what() << "\n";
-        }
-    }
-  
     //----------------------------------------------------------------------------------------------------------------------------------------------
     void cmdArgs(int argc, char *argv[]) {
         if (argc > 1 && argc < 5) {  // If argument is under 4 and over 1.
