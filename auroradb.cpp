@@ -242,9 +242,10 @@ private:
         }
 
         unique_lock<std::shared_mutex> lock(db_mutex);                                      
-        db[username] = hash(password);                                                            
+        db[current_tag + ":" + username] = hash(password);                                                            
         cout << "Database: User added: " << username << "\n"; 
     }
+
 
     int get(const string &username) {
         if (username.empty()) {
