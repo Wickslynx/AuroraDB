@@ -113,11 +113,13 @@ public:
 
         close(serverSocket);
     }
-
-    std::string hash(const std::string &input) {
-    std::hash<std::string> hasher; //Declare the hasher.
-    size_t hashed_value = hasher(input); //Hash the input.
-    return std::to_string(hashed_value);  //return the hashed value.
+    void hash(string& input) {
+            std::string hash(const std::string &input) {
+        std::hash<std::string> hasher; //Declare the hasher.
+        size_t hashed_value = hasher(input); //Hash the input.
+        return std::to_string(hashed_value);  //return the hashed value.
+    }
+   
 }
 
     }
@@ -174,24 +176,25 @@ public:
         }
     }
 
-    void thread(const string &function, const string &name, const string &password) {
-        std::vector<std::thread> threads; // Starts threading vector.
-        if (function == "get") {
-            threads.emplace_back(&AuroraDB::get, this, name); // If function get, start thread. (calls get in a thread)
-        } else if (function == "set") {
-            threads.emplace_back(&AuroraDB::set, this, name, password); // If function set, start thread. (calls set in a thread)
-        } else if (function == "rm") {
-            threads.emplace_back(&AuroraDB::rm, this, name); // If function rm, start thread. (calls rm in a thread.)
-        } else if (function == "compare") {
-            threads.emplace_back(&AuroraDB::compare, this, name, password); // If function compare, start thread. (calls compare in a thread.)
-        } else {
-            throw std::runtime_error("Oooops, something went wrong, try again."); // If an error occurs, throw an error.
-        }
-
-        for (auto &t : threads) {
-            t.join(); // Join threads together.
-        }
+    void Thread(const string &function, const string &name, const string &password) {
+    std::vector<std::thread> threads;
+    if (function == "get") {
+        threads.emplace_back(&AuroraDB::get, this, name);
+    } else if (function == "set") {
+        threads.emplace_back(&AuroraDB::set, this, name, password);
+    } else if (function == "rm") {
+        threads.emplace_back(&AuroraDB::rm, this, name);
+    } else if (function == "compare") {
+        threads.emplace_back(&AuroraDB::compare, this, name, password);
+    } else {
+        throw std::runtime_error("Oooops, something went wrong, try again.");
     }
+
+    for (auto &t : threads) {
+        t.join();
+    }
+}
+
 
     //----------------------------------------------------------------------------------------------------------------------------------------------
     bool compare(const string &username, const string &password) {
