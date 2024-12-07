@@ -115,6 +115,24 @@ private:
 
         outfile.close(); // Close the file.
     }
+    public:
+    AuroraDB() {
+        try {
+            load("storage.txt"); // Runs loading method.
+        } catch (const std::runtime_error &e) {
+            cerr << "Error loading database: " << e.what() << "\n";
+        }
+    }
+
+    ~AuroraDB() {
+        try {
+            save("storage.txt");
+        } catch (const std::runtime_error &e) {
+            cerr << "Error saving database: " << e.what() << "\n";
+            
+        }
+    }
+    
 
      //----------------------------------------------------------------------------------------------------------------------------------------------
 
