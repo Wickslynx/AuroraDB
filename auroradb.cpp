@@ -76,8 +76,10 @@ private:
         return std::to_string(hashed_value);  //return the hashed value.
     }
 
-     std::string get_db_path() {
-        char buffer[PATH_MAX];
+
+    //HAVE NO IDEA WHAT IMA USE THIS FOR BUT ITS HERE :)
+     std::string get_exe_path() {
+        char buffer[PATH_MAX]; //Declare a buffer.
         ssize_t count = readlink("/proc/self/exe", buffer, PATH_MAX);
         std::string exePath(buffer, count);
         return exePath.substr(0, exePath.find_last_of('/'));
@@ -230,7 +232,7 @@ public:
     AuroraDB() {
         try {
             tags["default"] = true;
-            load(string(get_db_path() + "storage/storage.txt")); // Runs loading method.
+            load("AuroraDB/storage/storage.txt"); // Runs loading method.
         } catch (const std::runtime_error &e) {
             cerr << "Error loading database: " << e.what() << "\n";
         }
@@ -238,7 +240,7 @@ public:
 
     ~AuroraDB() {
         try {
-            save(string(get_db_path() + "storage/storage.txt"));
+            save("AuroraDB/storage/storage.txt");
         } catch (const std::runtime_error &e) {
             cerr << "Error saving database: " << e.what() << "\n";
             
