@@ -362,7 +362,7 @@ public:
 
      //-----------------------------------------------------------------------------------------------------------------------------------------------
 
-    void setLock(string& password) {
+    void setLock(const string& password) {
         string input;
         while (true) {
             cout << "Verification password: ";
