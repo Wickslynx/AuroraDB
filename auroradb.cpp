@@ -238,7 +238,7 @@ public:
 
     ~AuroraDB() {
         try {
-            save("storage/storage.txt");
+            save(string(get_db_path() + "storage/storage.txt"));
         } catch (const std::runtime_error &e) {
             cerr << "Error saving database: " << e.what() << "\n";
             
