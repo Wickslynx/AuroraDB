@@ -75,6 +75,13 @@ private:
         return std::to_string(hashed_value);  //return the hashed value.
     }
 
+     std::string get_db_path() {
+        char buffer[PATH_MAX];
+        ssize_t count = readlink("/proc/self/exe", buffer, PATH_MAX);
+        std::string exePath(buffer, count);
+        return exePath.substr(0, exePath.find_last_of('/'));
+    }
+
     //----------------------------------------------------------------------------------------------------------------------------------------------
 
     void load(const string &file) {
@@ -148,6 +155,10 @@ private:
         outfile.close(); // Close the file.
     }
 
+    
+
+    //----------------------------------------------------------------------------------------------------------------------------------------------
+
     string GetCurrentTime() {
         
         std::time_t currentTime = std::time(nullptr); //Get current time.
@@ -160,6 +171,8 @@ private:
     
         return string(buffer);
     }
+
+    
 
 
 
@@ -174,13 +187,49 @@ private:
         outfile << GetCurrentTime() << " [AuroraDB] " << message << "\n";
     }
 
+   
+    //----------------------------------------------------------------------------------------------------------------------------------------------
+
+    
+    void thread(const string &function, const string &name, const string &password) {
+        std::vector<std::thread> threads;
+        try {
+            if (function == "get") {
+                threads.push_back(std::thread([this, &name]() {
+                    this->get(name);
+                }));
+            } else if (function == "set") {
+                threads.push_back(std::thread([this, &name, &password]() {
+                    this->set(name, password);
+                }));
+            } else if (function == "rm") {
+                threads.push_back(std::thread([this, &name]() {
+                this->rm(name);
+            }));
+            } else if (function == "compare") {
+                threads.push_back(std::thread([this, &name, &password]() {
+                    this->compare(name, password);
+                }));
+            } else {
+                throw std::runtime_error("Unknown thread function");
+            }
+
+            for (auto &t : threads) {
+                t.join();
+            }
+        } catch (const std::exception& e) {
+            cerr << "Thread error: " << e.what() << "\n";
+        }
+    }
+
+    //----------------------------------------------------------------------------------------------------------------------------------------------
 
 
 public:
     AuroraDB() {
         try {
             tags["default"] = true;
-            load("storage/storage.txt"); // Runs loading method.
+            load(string(get_db_path() + "storage/storage.txt")); // Runs loading method.
         } catch (const std::runtime_error &e) {
             cerr << "Error loading database: " << e.what() << "\n";
         }
@@ -295,6 +344,25 @@ public:
             cout << "No command line arguments given. Total arguments: " << argc << std::endl;
         }
     }
+
+    void addTag(const string& tag) {
+        
+        if (tag.empty() || std::all_of(tag.begin(), tag.end(), ::isspace)) {
+            cerr << "Error: Tag cannot be empty\n"; //If empty of whitespace.
+            return;
+        }
+
+    
+        if (tags.find(tag) != tags.end()) { // Check if tag already exists.
+            cerr << "Error: Tag '" << tag << "' already exists\n"; 
+            return;
+        }
+        
+        tags[tag] = true;  // Add the tag to "tags" map.
+    
+        cout << "Tag added: " << tag << "\n";
+    }
+
     //-----------------------------------------------------------------------------------------------------------------------------------------------
     void set(const string tag, const string &username, const string &password) {
         if (tags.find(tag) == tags.end()) {
@@ -317,24 +385,6 @@ public:
         
     }
 
-
-    void addTag(const string& tag) {
-        
-        if (tag.empty() || std::all_of(tag.begin(), tag.end(), ::isspace)) {
-            cerr << "Error: Tag cannot be empty\n"; //If empty of whitespace.
-            return;
-        }
-
-    
-        if (tags.find(tag) != tags.end()) { // Check if tag already exists.
-            cerr << "Error: Tag '" << tag << "' already exists\n"; 
-            return;
-        }
-        
-        tags[tag] = true;  // Add the tag to "tags" map.
-    
-        cout << "Tag added: " << tag << "\n";
-    }
 
 
 
@@ -377,36 +427,6 @@ public:
         }
     }
 
-    void thread(const string &function, const string &name, const string &password) {
-        std::vector<std::thread> threads;
-        try {
-            if (function == "get") {
-                threads.push_back(std::thread([this, &name]() {
-                    this->get(name);
-                }));
-            } else if (function == "set") {
-                threads.push_back(std::thread([this, &name, &password]() {
-                    this->set(name, password);
-                }));
-            } else if (function == "rm") {
-                threads.push_back(std::thread([this, &name]() {
-                this->rm(name);
-            }));
-            } else if (function == "compare") {
-                threads.push_back(std::thread([this, &name, &password]() {
-                    this->compare(name, password);
-                }));
-            } else {
-                throw std::runtime_error("Unknown thread function");
-            }
-
-            for (auto &t : threads) {
-                t.join();
-            }
-        } catch (const std::exception& e) {
-            cerr << "Thread error: " << e.what() << "\n";
-        }
-    }
 
     void InterfaceMode() {
         string action, username, password;
