@@ -165,7 +165,7 @@ private:
 
 
 
-    void WriteToLog(string& message) {
+    void WriteToLog(const string& message) {
         std::ofstream outfile("storage/log.txt", std::ios::out);
 
         if (!outfile.is_open()) {
