@@ -118,6 +118,11 @@ private:
     }
 
 
+    void WriteToLog() {
+        
+    }
+
+
 public:
     AuroraDB() {
         try {
