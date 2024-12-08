@@ -164,16 +164,16 @@ private:
 
 
 
-    void WriteToLog(const string& message) {
-        std::ofstream outfile("storage/log.txt", std::ios::out);
+    void WriteToLog(const std::string &message) {
+        std::ofstream outfile("storage/log.txt", std::ios::out | std::ios::app);  // Open the file in append mode
 
         if (!outfile.is_open()) {
             throw std::runtime_error("Error opening file for saving.");
         }
 
         outfile << GetCurrentTime() << " [AuroraDB] " << message << "\n";
-        
     }
+
 
 
 public:
