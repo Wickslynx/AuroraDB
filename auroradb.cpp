@@ -180,7 +180,7 @@ private:
 public:
     AuroraDB() {
         try {
-            addTag("default");
+            tags["default"] = true;
             load("storage/storage.txt"); // Runs loading method.
         } catch (const std::runtime_error &e) {
             cerr << "Error loading database: " << e.what() << "\n";
