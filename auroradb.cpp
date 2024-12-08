@@ -109,18 +109,27 @@ private:
     }
 
     void save(const string &filename) {
-        std::ofstream outfile(filename, std::ios::out | std::ios::trunc); // Open file in "out" mode and truncate
-        
+        std::ofstream outfile(filename, std::ios::out | std::ios::trunc); 
+    
         if (!outfile.is_open()) {
+            // Add more detailed error reporting
+            cerr << "Error: Cannot open file for saving. Filename: " << filename << "\n";
+            cerr << "Errno: " << errno << " - " << strerror(errno) << "\n";
             throw std::runtime_error("Error opening file for saving.");
+        }    
+
+        // Debug: print out database contents before saving
+        cerr << "Saving database. Total entries: " << db.size() << "\n";
+        for (const auto &entry : db) {
+            cerr << "Key: " << entry.first << ", Value: " << entry.second << "\n";
         }
 
         // Group users by their database tag
         std::unordered_map<string, std::vector<std::pair<string, string>>> tagged_users;
-        
+    
         for (const auto &pair : db) {
             size_t tag_separator = pair.first.find(':');  // Split the key into tag and username
-            
+        
             if (tag_separator != string::npos) {
                 string tag = pair.first.substr(0, tag_separator);
                 string username = pair.first.substr(tag_separator + 1);
@@ -132,22 +141,29 @@ private:
         for (const auto &tag_group : tagged_users) {
             // Write tag at the beginning of the user list
             outfile << "<AuroraDB::" << tag_group.first << "> -\n";
-            
+        
             // Write users in this tag group
             for (const auto &user : tag_group.second) {
                 outfile << user.first << " " << user.second << "\n";
             }
-            
-
+        
             outfile << "</AuroraDB>\n\n"; 
         }
 
-        outfile.flush();  // Flush.
-        
+        outfile.flush();  // Explicitly flush
+    
+        if (outfile.fail()) {
+            cerr << "Error: Failed to write to file\n";
+        }
 
         outfile.close(); // Close the file.
-    }
 
+        // Verify file was written
+        std::ifstream verifyFile(filename);
+        if (verifyFile.peek() == std::ifstream::traits_type::eof()) {
+            cerr << "Warning: File appears to be empty after saving\n";
+        }
+    }
 
     string GetCurrentTime() {
         
