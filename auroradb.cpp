@@ -42,9 +42,10 @@ SOFTWARE.
 #include <sstream>       // For getting strings.
 #include <vector>        //For vectors.
 #include <functional>    //For usefull stuff.
-#include <algorithm>     // For additional string and algorithm functions
+#include <algorithm>     // For string and algorithm functions
 #include <cstring>       // For memset
 #include <ctime>         //For time stuff.
+#include <limits.h>      //For linux stuff.
 
 // Define, the best thing in C++.
 #define ERROR_MSG(string) (std::cerr << "ERROR!: " << string << std::endl)
