@@ -10,10 +10,11 @@
 #include <unistd.h>      // For networking.
 #include <stdexcept>     // For all error, Will be replaced and removed soon..
 #include <sstream>       // For getting strings.
-#include <vector>
-#include <functional>
-#include <algorithm>     // Added for additional string and algorithm functions
-#include <cstring>       // Added for memset
+#include <vector>        //For vectors.
+#include <functional>    //For usefull stuff.
+#include <algorithm>     // For additional string and algorithm functions
+#include <cstring>       // For memset
+#include <ctime>         //For time stuff.
 
 // Define, the best thing in C++.
 #define ERROR_MSG(string) (std::cerr << "ERROR!: " << string << std::endl)
@@ -117,8 +118,11 @@ private:
         outfile.close(); // Close the file.
     }
 
-    void GetCurrentTime() {
-        auto now = 
+    string GetCurrentTime() {
+        std::time_t currentTime = std::time(nullptr); //Get the current time.
+        std::tm* localTime = std::localtime(&currentTime); // Covert it to local time.
+
+        return std::asctime(localtime); //Convert and return the time in a string format.
     }
 
 
