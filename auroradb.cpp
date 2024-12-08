@@ -1,3 +1,33 @@
+/* 
+
+Copyright (c) 2024 Wicks (Original Author of AuroraDB)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+*/
+
+
+
+
+
+
+
+
 #include <iostream>      // For cout, cin, and more.
 #include <string>        // String library.
 #include <unordered_map> // The unordered_map.
@@ -267,8 +297,8 @@ public:
     }
     //-----------------------------------------------------------------------------------------------------------------------------------------------
     void set(const string tag, const string &username, const string &password) {
-        if (tags.find(tag) != tags.end()) {
-            ERROR_MSG("Tag dosen't exist, please create it using addTag()"); //Prevent non exsisnt tags.
+        if (tags.find(tag) == tags.end()) {
+            ERROR_MSG("Tag doesn't exist, please create it using addTag()");
         }
         
         // Prevent empty or whitespace-only usernames
@@ -278,10 +308,35 @@ public:
         }
 
         unique_lock<std::shared_mutex> lock(db_mutex);   
+
+        WriteToLog(string("SET " + username + " " + password + " 0 "));
         
-        db[tag + ":" + username] = hash(password);                                                            
+        db[tag + ":" + username] = hash(password);   
+        
         cout << "Database: User added: " << username << "\n"; 
+        
     }
+
+
+    void addTag(const string& tag) {
+        
+        if (tag.empty() || std::all_of(tag.begin(), tag.end(), ::isspace)) {
+            cerr << "Error: Tag cannot be empty\n"; //If empty of whitespace.
+            return;
+        }
+
+    
+        if (tags.find(tag) != tags.end()) { // Check if tag already exists.
+            cerr << "Error: Tag '" << tag << "' already exists\n"; 
+            return;
+        }
+        
+        tags[tag] = true;  // Add the tag to "tags" map.
+    
+        cout << "Tag added: " << tag << "\n";
+    }
+
+
 
     void set(const string &username, const string &password) { 
         set("default", username, password); //Set the tag to default tag.
@@ -296,11 +351,29 @@ public:
         shared_lock<std::shared_mutex> lock(db_mutex);
         auto it = db.find(username);
         if (it != db.end()) {
+            WriteToLog(string("GET " + username + " 0 "));
             cout << "User: " << username << ":" << it->second << "\n";
             return 0;
         } else {
             cout << "Error: User not found\n";
             return -2;
+        }
+    }
+
+     //-----------------------------------------------------------------------------------------------------------------------------------------------
+
+    void SetLock(string& password) {
+        string input;
+        while (true) {
+            cout << "Verification password: ";
+            cin >> input;
+
+            if (input == password) {
+                cout << "Password confirmed, Welcome back!" << "\n";
+                break;
+            } else {
+                cout << "Password denied, try again.";
+            }
         }
     }
 
@@ -335,6 +408,33 @@ public:
         }
     }
 
+    void commandInterface() {
+        string action, username, password;
+        cout << "Welcome to AuroraDB! \n Please enter which of following actions you want to do \n (1) Set user. (2) Remove user. (3) Get user. (4). Compare user. : ";
+        cin >> action;
+
+        cout << "Please enter the username: ";
+        cin >> username;
+        
+        cout << "\nPlease enter the password: ";
+        cin >> password;
+        
+        switch (std::stoi(action)) {
+            case 1:
+                set(username, password);
+                break;
+            case 2:
+                rm(username);
+                break;
+            case 3:
+                get(username);
+                break;
+            case 4:
+                compare(username, password);
+                break;
+        }
+    }
+
     //----------------------------------------------------------------------------------------------------------------------------------------------
     bool compare(const string &username, const string &password) {
         if (username.empty() || password.empty()) {
@@ -360,6 +460,7 @@ public:
         }
 
         unique_lock<std::shared_mutex> lock(db_mutex); // Locks the db.
+        WriteToLog(string("RM " + username + " " + " 0 "));
         size_t removed = db.erase(username);            // Erases user from database.
         if (removed > 0) {
             cout << "User removed: " << username << "\n";  // Outputs message.
@@ -370,16 +471,14 @@ public:
 };
 
 int main(int argc, char* argv[]) {
-    try {
-        AuroraDB db;
-        db.cmdArgs(argc, argv);
-    } catch (const std::exception& e) {
-        cerr << "Unhandled exception: " << e.what() << "\n";
-        return 1;
-    }
+    //Write in your code here.
+    AuroraDB db;
+    db.cmdArgs(argc, argv);
+    db.commandInterface();
+    db.connect(8080);
     
-    // Database supports multiple different solutions, both command line arguments, networking and you can write commands under here: (Modified version has interactive menu.)
-    // Threading is being worked on, you see different code parts that support it.
+    // Database supports multiple different solutions, both command line arguments, networking, interactive command line menu and you can write commands under here: 
+    // Threading is being worked on!
     // Have fun, greetings Wicks.
     return 0;
 }
