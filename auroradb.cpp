@@ -166,7 +166,7 @@ private:
 
 
     void WriteToLog(string& message) {
-        std::ofstream outfile("log.txt", std::ios::out);
+        std::ofstream outfile("storage/log.txt", std::ios::out);
 
         if (!outfile.is_open()) {
             throw std::runtime_error("Error opening file for saving.");
@@ -180,7 +180,7 @@ private:
 public:
     AuroraDB() {
         try {
-            load("storage.txt"); // Runs loading method.
+            load("storage/storage.txt"); // Runs loading method.
         } catch (const std::runtime_error &e) {
             cerr << "Error loading database: " << e.what() << "\n";
         }
@@ -188,7 +188,7 @@ public:
 
     ~AuroraDB() {
         try {
-            save("storage.txt");
+            save("storage/storage.txt");
         } catch (const std::runtime_error &e) {
             cerr << "Error saving database: " << e.what() << "\n";
             
