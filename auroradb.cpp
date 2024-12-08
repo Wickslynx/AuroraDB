@@ -470,14 +470,9 @@ public:
     }
 };
 
-int main(int argc, char* argv[]) {
-    //Write in your code here.
-    AuroraDB db;
-    db.cmdArgs(argc, argv);
-    db.InterfaceMode();
+
     
-    // Database supports multiple different solutions, both command line arguments, networking, interactive command line menu and you can write commands under here: 
-    // Threading is being worked on!
-    // Have fun, greetings Wicks.
-    return 0;
-}
+// Database supports multiple different solutions, both command line arguments, networking, interactive command line menu and you can write commands under here: 
+// Threading is being worked on!
+// Have fun, greetings Wicks.
+   
