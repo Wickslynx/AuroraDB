@@ -492,7 +492,6 @@ int main(int argc, char* argv[]) {
     AuroraDB db;
     db.cmdArgs(argc, argv);
     db.InterfaceMode();
-    db.connect(8080);
     
     // Database supports multiple different solutions, both command line arguments, networking, interactive command line menu and you can write commands under here: 
     // Threading is being worked on!
