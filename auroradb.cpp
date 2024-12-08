@@ -118,12 +118,21 @@ private:
         outfile.close(); // Close the file.
     }
 
-    string GetCurrentTime() {
-        std::time_t currentTime = std::time(nullptr); //Get the current time.
-        std::tm* localTime = std::localtime(&currentTime); // Covert it to local time.
 
-        return std::asctime(localtime); //Convert and return the time in a string format.
+    string GetCurrentTime() {
+        
+        std::time_t currentTime = std::time(nullptr); //Get current time.
+    
+        std::tm* localTime = std::localtime(&currentTime); // Convert to local.
+    
+
+        char buffer[80]; //Declare an buffer.
+        std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", localTime); // Convert to string format
+    
+        return string(buffer);
     }
+
+
 
 
     void WriteToLog(string& message) {
