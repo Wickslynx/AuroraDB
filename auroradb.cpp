@@ -117,8 +117,19 @@ private:
         outfile.close(); // Close the file.
     }
 
+    void GetCurrentTime() {
+        auto now = 
+    }
 
-    void WriteToLog() {
+
+    void WriteToLog(string& message) {
+        std::ofstream outfile("log.txt", std::ios::out);
+
+        if (!outfile.is_open()) {
+            throw std::runtime_error("Error opening file for saving.");
+        }
+
+        outfile << GetCurrentTime() << " [AuroraDB] " << message << "\n";
         
     }
 
