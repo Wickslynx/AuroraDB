@@ -225,14 +225,28 @@ private:
         }
     }
 
+    void init() {
+        Options options;
+        Options* pOptions = &options;
+        
+        if (pOptions->storage_path.empty()) { //if path is empty.
+            options.storage_path = "storage/storage.txt"; // Use default path 
+        }
+    }
+
     //----------------------------------------------------------------------------------------------------------------------------------------------
 
 
 public:
+
+    typedef struct Options {
+        string storage_path
+    } Options 
+
     AuroraDB() {
         try {
             tags["default"] = true;
-            load("AuroraDB/storage/storage.txt"); // Runs loading method.
+            load(storage_path); // Runs loading method.
         } catch (const std::runtime_error &e) {
             cerr << "Error loading database: " << e.what() << "\n";
         }
