@@ -362,7 +362,7 @@ public:
 
      //-----------------------------------------------------------------------------------------------------------------------------------------------
 
-    void SetLock(string& password) {
+    void setLock(string& password) {
         string input;
         while (true) {
             cout << "Verification password: ";
@@ -408,7 +408,7 @@ public:
         }
     }
 
-    void commandInterface() {
+    void InterfaceMode() {
         string action, username, password;
         cout << "Welcome to AuroraDB! \n Please enter which of following actions you want to do \n (1) Set user. (2) Remove user. (3) Get user. (4). Compare user. : ";
         cin >> action;
@@ -474,7 +474,7 @@ int main(int argc, char* argv[]) {
     //Write in your code here.
     AuroraDB db;
     db.cmdArgs(argc, argv);
-    db.commandInterface();
+    db.InterfaceMode();
     db.connect(8080);
     
     // Database supports multiple different solutions, both command line arguments, networking, interactive command line menu and you can write commands under here: 
