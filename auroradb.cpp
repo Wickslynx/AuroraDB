@@ -239,17 +239,19 @@ private:
 
 public:
 
+    
     // --- Work in progress ---
     typedef struct Options {
-        string storage_path
-    } Options
+        string storage_path;
+    } Options;
     // --- Work in progress ---
+    
 
 
     AuroraDB() {
         try {
             tags["default"] = true;
-            load("storage/storage.txt"; // Runs loading method.
+            load("storage/storage.txt"); // Runs loading method.
         } catch (const std::runtime_error &e) {
             cerr << "Error loading database: " << e.what() << "\n";
         }
