@@ -251,7 +251,8 @@ public:
     AuroraDB() {
         try {
             tags["default"] = true;
-            load("storage/storage.txt"); // Runs loading method.
+            
+            load("AuroraDB/storage/storage.txt"); // Runs loading method.
         } catch (const std::runtime_error &e) {
             cerr << "Error loading database: " << e.what() << "\n";
         }
@@ -259,7 +260,7 @@ public:
 
     ~AuroraDB() {
         try {
-            save("storage/storage.txt");
+            save("AuroraDB/storage/storage.txt");
         } catch (const std::runtime_error &e) {
             cerr << "Error saving database: " << e.what() << "\n";
             
