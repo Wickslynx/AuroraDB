@@ -475,7 +475,7 @@ public:
         cin >> username;
 
         
-        if (action != 3) { // Only ask for password if not using "get".
+        if (std::stoi(action) != 3) { // Only ask for password if not using "get".
                 cout << "Please enter the password: ";
                 cin >> password;
             }
