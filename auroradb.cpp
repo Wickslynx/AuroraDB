@@ -469,8 +469,12 @@ public:
         cout << "Welcome to AuroraDB! \n Please enter which of following actions you want to do \n (1) Set user. (2) Remove user. (3) Get user. (4). Compare user. : "; //Welcome message.
         cin >> action;
 
+         int choice = std::stoi(action); //Convert to type int.
+
         cout << "Please enter the username: ";
         cin >> username;
+
+        
         if (action != 3) { // Only ask for password if not using "get".
                 cout << "Please enter the password: ";
                 cin >> password;
