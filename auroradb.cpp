@@ -415,6 +415,9 @@ public:
         set("default", username, password); //Set the tag to default tag.
     }
 
+
+    
+
     int get(const string &username) {
         if (username.empty()) {
             cerr << "Error: Username cannot be empty\n";
@@ -422,15 +425,19 @@ public:
         }
 
         shared_lock<std::shared_mutex> lock(db_mutex);
-        auto it = db.find(username);
-        if (it != db.end()) {
-            WriteToLog(string("GET " + username + " 0 "));
-            cout << "User: " << username << ":" << it->second << "\n";
-            return 0;
-        } else {
-            cout << "Error: User not found\n";
-            return -2;
+    
+        // Search through all keys in the database
+        for (const auto& entry : db) {
+            // Check if the entry's key ends with the given username
+            if (entry.first.substr(entry.first.find(':') + 1) == username) {
+                WriteToLog(string("GET " + username + " 0 "));
+                cout << "User: " << entry.first << ":" << entry.second << "\n";
+                return 0;
+            }
         }
+
+        cout << "Error: User not found\n";
+        return -2;
     }
 
      //-----------------------------------------------------------------------------------------------------------------------------------------------
