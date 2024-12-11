@@ -392,19 +392,25 @@ public:
             ERROR_MSG("Tag doesn't exist, please create it using addTag()");
         }
         
-        // Prevent empty or whitespace-only usernames
-        if (username.empty() || std::all_of(username.begin(), username.end(), ::isspace)) {
+        if (username.empty() || std::all_of(username.begin(), username.end(), ::isspace)) { // Prevent empty or whitespace only usernames.
             cerr << "Error: Username cannot be empty\n";
             return;
         }
 
+        for (const auto& entry : db) { //Check for every tag.
+            if (entry.first.substr(entry.first.find(':') + 1) == username) { //if entry exist under the same tag,
+                cerr << "Error: Username already exists in database\n"; //Throw error.
+                return;
+            }
+        }
+
         unique_lock<std::shared_mutex> lock(db_mutex);   
 
-        WriteToLog(string("SET " + username + " " + password + " 0 "));
+        WriteToLog(string("SET " + username + " " + password + " 0 ")); //Write ot log.
         
         db[tag + ":" + username] = hash(password);   
         
-        cout << "Database: User added: " << username << "\n"; 
+        cout << "Database: User added: " << username << "\n";  //
         
     }
 
@@ -426,9 +432,9 @@ public:
 
         shared_lock<std::shared_mutex> lock(db_mutex);
     
-        // Search through all keys in the database
+        // Search through all keys in the database.
         for (const auto& entry : db) {
-            // Check if the entry's key ends with the given username
+            // Check if the entry's key ends with the given username.
             if (entry.first.substr(entry.first.find(':') + 1) == username) {
                 WriteToLog(string("GET " + username + " 0 "));
                 cout << "User: " << entry.first << ":" << entry.second << "\n";
@@ -442,17 +448,17 @@ public:
 
      //-----------------------------------------------------------------------------------------------------------------------------------------------
 
-    void setLock(const string& password) {
+    void setLock(const string& password) { 
         string input;
         while (true) {
             cout << "Verification password: ";
             cin >> input;
 
-            if (input == password) {
-                cout << "Password confirmed, Welcome back!" << "\n";
+            if (input == password) { //Check if the password matches.
+                cout << "Password confirmed, Welcome back!" << "\n"; //Print out result to user.
                 break;
             } else {
-                cout << "Password denied, try again.";
+                cout << "Password denied, try again."; //Print out result to user.
             }
         }
     }
@@ -460,14 +466,16 @@ public:
 
     void InterfaceMode() {
         string action, username, password;
-        cout << "Welcome to AuroraDB! \n Please enter which of following actions you want to do \n (1) Set user. (2) Remove user. (3) Get user. (4). Compare user. : ";
+        cout << "Welcome to AuroraDB! \n Please enter which of following actions you want to do \n (1) Set user. (2) Remove user. (3) Get user. (4). Compare user. : "; //Welcome message.
         cin >> action;
 
         cout << "Please enter the username: ";
         cin >> username;
+        if (action != 3) { //Only as for password if using "get".
+            cout << "\nPlease enter the password: ";
+            cin >> password;
+        }
         
-        cout << "\nPlease enter the password: ";
-        cin >> password;
         
         switch (std::stoi(action)) {
             case 1:
@@ -488,20 +496,26 @@ public:
     //----------------------------------------------------------------------------------------------------------------------------------------------
     bool compare(const string &username, const string &password) {
         if (username.empty() || password.empty()) {
-            cerr << "Error: Username and password cannot be empty\n";
+            cerr << "Error: Username and password cannot be empty\n";  //Check if the password or username is empty, return error.
             return false;
         }
 
-        shared_lock<std::shared_mutex> lock(db_mutex); // Uses shared_lock, multiple threads can read at the same time.
-        auto it = db.find(username);                   // Declare variable.
-        if (it != db.end() && it->second == hash(password)) {  // If user is found.
-            cout << "Password matched for user: " << username << "\n"; // Print success message.
-            return true; // Return true.
-        } else {
-            cout << "No match found for user: " << username << "\n"; // Print no match.
-            return false; // Return false.
+        shared_lock<std::shared_mutex> lock(db_mutex);
+        for (const auto& entry : db) {
+         if (entry.first.substr(entry.first.find(':') + 1) == username) { // Check if the entry's key ends with the given username.
+            if (entry.second == hash(password)) { // Compare the hashed password.
+                cout << "Password matched for user: " << username << "\n"; //Print out result to user.
+                return true;
+            } else {
+                cout << "No match found for user: " << username << "\n";  //Print out result to user.
+                return false;
+            }
         }
     }
+
+    cout << "User not found: " << username << "\n";  //Print out result to user.
+    return false; 
+}
 
     void rm(const string &username) {
         if (username.empty()) {
@@ -511,11 +525,24 @@ public:
 
         unique_lock<std::shared_mutex> lock(db_mutex); // Locks the db.
         WriteToLog(string("RM " + username + " " + " 0 "));
-        size_t removed = db.erase(username);            // Erases user from database.
-        if (removed > 0) {
-            cout << "User removed: " << username << "\n";  // Outputs message.
+    
+        
+        bool userRemoved = false; // Bool to track if any user was removed.
+    
+        // Use iterator to safely remove while iterating.
+        for (auto it = db.begin(); it != db.end(); ) {
+            if (it->first.substr(it->first.find(':') + 1) == username) { //Find the semicolon to seperate the tag from the username.
+                it = db.erase(it); //Erase the username.
+                userRemoved = true;
+            } else {
+                ++it; //Else move on.
+            }
+        }
+    
+        if (userRemoved) {
+            cout << "User removed: " << username << "\n";  //Print out result to user.
         } else {
-            cout << "User not found: " << username << "\n";
+            cout << "User not found: " << username << "\n";  //Print out result to user.
         }
     }
 };
