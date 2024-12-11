@@ -229,8 +229,8 @@ private:
         Options options;
         Options* pOptions = &options;
         
-        if (pOptions->storage_path.empty()) { //if path is empty.
-            options.storage_path = "storage/storage.txt"; // Use default path 
+        if (pOptions->storage_path.empty()) { //if path is empty..
+            options.storage_path = "storage/storage.txt"; // Use default path .
         }
     }
 
@@ -287,13 +287,13 @@ public:
             throw std::runtime_error("Failed to bind socket");
         }
 
-        if (listen(serverSocket, 10000) < 0) {
+        if (listen(serverSocket, 10000) < 0) { //If failed to listen, throw error.
             close(serverSocket);
             throw std::runtime_error("Failed to listen on socket");
         }
 
-        int clientSocket = accept(serverSocket, nullptr, nullptr);
-        if (clientSocket < 0) {
+        int clientSocket = accept(serverSocket, nullptr, nullptr); //Accept the clientsocket.
+        if (clientSocket < 0) { //If no clientsocket.
             close(serverSocket);
             throw std::runtime_error("Failed to accept client connection");
         }
@@ -304,10 +304,10 @@ public:
             ssize_t bytesReceived = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
             
             if (bytesReceived <= 0) {
-                break; // Connection closed or error
+                break; // Connection closed or error.
             }
 
-            buffer[bytesReceived] = '\0'; // Null-terminate the received data
+            buffer[bytesReceived] = '\0'; // Null-terminate the received data.
 
             std::string command, name, password;
             std::istringstream stream(buffer);
@@ -333,7 +333,7 @@ public:
                 ERROR_MSG(e.what());
             }
         }
-
+        //Close sockets.
         close(clientSocket);
         close(serverSocket);
     }
