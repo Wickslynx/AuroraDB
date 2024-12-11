@@ -471,10 +471,10 @@ public:
 
         cout << "Please enter the username: ";
         cin >> username;
-        if (action != 3) { //Only as for password if using "get".
-            cout << "\nPlease enter the password: ";
-            cin >> password;
-        }
+        if (action != 3) { // Only ask for password if not using "get".
+                cout << "Please enter the password: ";
+                cin >> password;
+            }
         
         
         switch (std::stoi(action)) {
