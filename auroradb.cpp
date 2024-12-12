@@ -350,7 +350,7 @@ public:
     //----------------------------------------------------------------------------------------------------------------------------------------------
     void cmdArgs(int argc, char *argv[]) {
         if (argc > 1 && argc < 5) {  // If argument is under 4 and over 1.
-            std::string cmd, name, password; // Declare cmd, name, password.
+            std::string cmd, name, password, tag; // Declare cmd, name, password and tag.
             try {
                 cmd = argv[1];                                 // Assign cmd to argv[1].
                 name = (argc  > 2 && argc < 4) ? argv[2] : ""; // Assign name to argv[2].
