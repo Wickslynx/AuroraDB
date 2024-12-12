@@ -190,6 +190,15 @@ private:
         outfile << GetCurrentTime() << " [AuroraDB] " << message << "\n";
     }
 
+    void printAuroraDB() { //Prints the logo, kinda nice actually.
+        printf("    _                           _ ____   ____   \n");
+        printf("   / \\   _ __  _ __   ___ _ __ | |  _ \\ / ___|  \n");
+        printf("  / _ \\ | '_ \\| '_ \\ / _ \\ '_ \\| | | | | |      \n");
+        printf(" / ___ \\| | | | | | |  __/ | | | | |_| | |___   \n");
+        printf("/_/   \\_\\_| |_|_| |_|\\___|_| |_|_|____/ \\____|  \n");
+    }
+
+
    
     //----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -343,14 +352,17 @@ public:
         if (argc > 1 && argc < 5) {  // If argument is under 4 and over 1.
             std::string cmd, name, password; // Declare cmd, name, password.
             try {
-                cmd = argv[1];                        // Assign cmd to argv[1].
-                name = (argc > 2) ? argv[2] : "";     // Assign name to argv[2].
-                password = (argc > 3) ? argv[3] : ""; // Assign password to argv[3].
+                cmd = argv[1];                                 // Assign cmd to argv[1].
+                name = (argc  > 2 && argc < 4) ? argv[2] : ""; // Assign name to argv[2].
+                password = (argc == 3) ? argv[3] : "";         // Assign password to argv[3].
+                tag = (argc == 4) ? argv[4] : "";              //Assign tag to argv[4]. 
 
                 if (cmd == "get" && argc > 2) {
                     cout << (get(name) == 0 ? "Get successful" : "Get failed") << "\n";
-                } else if (cmd == "set" && argc > 3) {
+                } else if (cmd == "set" && argc == 3) {
                     set(name, password);
+                } else if (cmd == "set" && argc == 4) {
+                    set(tag, name, password);
                 } else if (cmd == "rm" && argc > 2) {
                     rm(name);
                 } else if (cmd == "compare" && argc > 3) {
@@ -410,7 +422,7 @@ public:
         
         db[tag + ":" + username] = hash(password);   
         
-        cout << "Database: User added: " << username << "\n";  //
+        cout << "Database: User added: " << username << "\n";  // Write to log.
         
     }
 
@@ -466,6 +478,7 @@ public:
 
     void InterfaceMode() {
         string action, username, password;
+        printAuroraDB();
         cout << "Welcome to AuroraDB! \n Please enter which of following actions you want to do \n (1) Set user. (2) Remove user. (3) Get user. (4). Compare user. : "; //Welcome message.
         cin >> action;
 
