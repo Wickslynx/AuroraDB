@@ -191,14 +191,14 @@ private:
     }
 
     void printAuroraDB() { //Prints the logo, kinda nice actually.
-        printf("    _                           _ ____   ____   \n");
-        printf("   / \\   _ __  _ __   ___ _ __ | |  _ \\ / ___|  \n");
-        printf("  / _ \\ | '_ \\| '_ \\ / _ \\ '_ \\| | | | | |      \n");
-        printf(" / ___ \\| | | | | | |  __/ | | | | |_| | |___   \n");
-        printf("/_/   \\_\\_| |_|_| |_|\\___|_| |_|_|____/ \\____|  \n");
+
+        printf("   _____                                   ________ __________ \n");
+        printf("  /  _  \\  __ _________  ________________  \\______ \\\\______   \\\n");
+        printf(" /  /_\\  \\|  |  \\_  __ \\/  _ \\_  __ \\__  \\ |    |  \\|    |  _/\n");
+        printf("/    |    \\  |  /|  | \\(  <_> )  | \\/ __ \\|    `   \\    |   \\\n");
+        printf("\\____|__  /____/ |__|   \\____/|__|  (____  /_______  /______  /\n");
+        printf("        \\/                               \\/        \\/       \\/ \n");
     }
-
-
    
     //----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -349,17 +349,17 @@ public:
 
     //----------------------------------------------------------------------------------------------------------------------------------------------
     void cmdArgs(int argc, char *argv[]) {
-        if (argc > 1 && argc < 5) {  // If argument is under 4 and over 1.
-            std::string cmd, name, password, tag; // Declare cmd, name, password and tag.
+        if (argc > 1 && argc < 5) {  // If argument count is between 2 and 4 inclusive.
+            std::string cmd, name, password, tag; // Declare cmd, name, password, tag.
             try {
                 cmd = argv[1];                                 // Assign cmd to argv[1].
-                name = (argc  > 2 && argc < 4) ? argv[2] : ""; // Assign name to argv[2].
-                password = (argc == 3) ? argv[3] : "";         // Assign password to argv[3].
-                tag = (argc == 4) ? argv[4] : "";              //Assign tag to argv[4]. 
+                name = (argc > 2) ? argv[2] : "";              // Assign name to argv[2] if argc > 2.
+                password = (argc > 3) ? argv[3] : "";          // Assign password to argv[3] if argc > 3.
+                tag = (argc > 4) ? argv[4] : "";              // Assign tag to argv[4] if argc == 4.
 
-                if (cmd == "get" && argc > 2) {
-                    cout << (get(name) == 0 ? "Get successful" : "Get failed") << "\n";
-                } else if (cmd == "set" && argc == 3) {
+               if (cmd == "get" && argc > 2) {
+                    std::cout << (get(name) == 0 ? "0" : "-1") << "\n";
+               } else if (cmd == "set" && argc == 3) {
                     set(name, password);
                 } else if (cmd == "set" && argc == 4) {
                     set(tag, name, password);
@@ -371,14 +371,15 @@ public:
                     throw std::runtime_error("Error: Must use (set (Name, Password), get (Name), rm (Name), compare (Name, Password))");
                 }
             } catch (std::runtime_error &e) {
-                cerr << "Error: Argument not recognised: " << e.what() << "\n";
+                std::cerr << "Error: Argument not recognised: " << e.what() << "\n";
             }
-        } else if (argc > 4) {
-            cerr << "Error: Arguments exceeding limit, maximum of three arguments.\n";
+        } else if (argc >= 5) { // Ensure the comparison is clear for arguments exceeding limit.
+            std::cerr << "Error: Arguments exceeding limit, maximum of three arguments.\n";
         } else {
-            cout << "No command line arguments given. Total arguments: " << argc << std::endl;
+            std::cout << "No command line arguments given. Total arguments: " << argc << std::endl;
         }
     }
+
 
     void addTag(const string& tag) {
         
@@ -440,8 +441,7 @@ public:
         if (username.empty()) {
             cerr << "Error: Username cannot be empty\n";
             return -1;
-        }
-
+        } 
         shared_lock<std::shared_mutex> lock(db_mutex);
     
         // Search through all keys in the database.
@@ -476,38 +476,51 @@ public:
     }
 
 
-    void InterfaceMode() {
+    int InterfaceMode() {
         string action, username, password;
         printAuroraDB();
-        cout << "Welcome to AuroraDB! \n Please enter which of following actions you want to do \n (1) Set user. (2) Remove user. (3) Get user. (4). Compare user. : "; //Welcome message.
-        cin >> action;
+        cout << "Welcome to AuroraDB!" << "\n";
+        while (true) {
+            cout << "\n\nPlease enter which of following actions you want to do \n (1) Set user. (2) Remove user. (3) Get user. (4). Compare user. (5) Quit : "; //Welcome message.
+            cin >> action;
 
-         int choice = std::stoi(action); //Convert to type int.
+            if (action != "5" && action != "4" && action != "3" && action != "2" && action != "1") {
+                cout << "Invalid action.. \033 \n";
+                return -1;
+            }
 
-        cout << "Please enter the username: ";
-        cin >> username;
+           
+            if (std::stoi(action) != 5) {
+                cout << "Please enter the username: ";
+                cin >> username;
+            }
+            
 
         
-        if (std::stoi(action) != 3) { // Only ask for password if not using "get".
+            if (std::stoi(action) != 3 && std::stoi(action) != 5) { // Only ask for password if not using "get".
                 cout << "Please enter the password: ";
                 cin >> password;
             }
-        
-        
-        switch (std::stoi(action)) {
-            case 1:
-                set(username, password);
-                break;
-            case 2:
-                rm(username);
-                break;
-            case 3:
-                get(username);
-                break;
-            case 4:
-                compare(username, password);
-                break;
+
+
+            switch (std::stoi(action)) {
+                case 1:
+                    set(username, password);
+                    break;
+                case 2:
+                    rm(username);
+                    break;
+                case 3:
+                    get(username);
+                    break;
+                case 4:
+                    compare(username, password);
+                    break;
+                case 5:
+                    return 0;
+            }
         }
+       
     }
 
     //----------------------------------------------------------------------------------------------------------------------------------------------
