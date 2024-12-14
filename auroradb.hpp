@@ -112,10 +112,7 @@ private:
         }
     }
 
-    // ... (rest of the private methods continue to be inline and follow the same pattern)
-
-    // Include all other methods from the original implementation, made inline
-    // Preserve all original comments
+    
 
 public:
     // --- Work in progress ---
@@ -141,6 +138,75 @@ public:
         } catch (const std::runtime_error &e) {
             cerr << "Error saving database: " << e.what() << "\n";
         }
+    }
+
+    //----------------------------------------------------------------------------------------------------------------------------------------------
+
+    //--WORK IN PROGRESS, DONT RUN--
+    int FrontEndMode() {
+        try {
+            #include <gtkmm.h>
+
+            auto app = Gtk::Application::create("AuroraDB"); //Create the application..
+
+            class AuroraDBWindow : public Gtk::Window {
+            
+            private:
+            
+            }
+
+            
+        } catch (const std::runtime_error &e) {
+            cerr << "Error loading frontend: " << e.what() << "\n";
+        }
+        
+    }
+
+    int InterfaceMode() {
+        string action, username, password;
+        printAuroraDB();
+        cout << "Welcome to AuroraDB!" << "\n";
+        while (true) {
+            cout << "\n\nPlease enter which of following actions you want to do \n (1) Set user. (2) Remove user. (3) Get user. (4). Compare user. (5) Quit : "; //Welcome message.
+            cin >> action;
+
+            if (action != "5" && action != "4" && action != "3" && action != "2" && action != "1") {
+                cout << "Invalid action.. \033 \n";
+                return -1;
+            }
+
+           
+            if (std::stoi(action) != 5) {
+                cout << "Please enter the username: ";
+                cin >> username;
+            }
+            
+
+        
+            if (std::stoi(action) != 3 && std::stoi(action) != 5) { // Only ask for password if not using "get".
+                cout << "Please enter the password: ";
+                cin >> password;
+            }
+
+
+            switch (std::stoi(action)) {
+                case 1:
+                    set(username, password);
+                    break;
+                case 2:
+                    rm(username);
+                    break;
+                case 3:
+                    get(username);
+                    break;
+                case 4:
+                    compare(username, password);
+                    break;
+                case 5:
+                    return 0;
+            }
+        }
+       
     }
 
 
@@ -343,52 +409,6 @@ public:
     }
 
 
-    int InterfaceMode() {
-        string action, username, password;
-        printAuroraDB();
-        cout << "Welcome to AuroraDB!" << "\n";
-        while (true) {
-            cout << "\n\nPlease enter which of following actions you want to do \n (1) Set user. (2) Remove user. (3) Get user. (4). Compare user. (5) Quit : "; //Welcome message.
-            cin >> action;
-
-            if (action != "5" && action != "4" && action != "3" && action != "2" && action != "1") {
-                cout << "Invalid action.. \033 \n";
-                return -1;
-            }
-
-           
-            if (std::stoi(action) != 5) {
-                cout << "Please enter the username: ";
-                cin >> username;
-            }
-            
-
-        
-            if (std::stoi(action) != 3 && std::stoi(action) != 5) { // Only ask for password if not using "get".
-                cout << "Please enter the password: ";
-                cin >> password;
-            }
-
-
-            switch (std::stoi(action)) {
-                case 1:
-                    set(username, password);
-                    break;
-                case 2:
-                    rm(username);
-                    break;
-                case 3:
-                    get(username);
-                    break;
-                case 4:
-                    compare(username, password);
-                    break;
-                case 5:
-                    return 0;
-            }
-        }
-       
-    }
 
     //----------------------------------------------------------------------------------------------------------------------------------------------
     bool compare(const string &username, const string &password) {
