@@ -1,3 +1,7 @@
+
+#pragma once
+
+
 /* 
 
 Copyright (c) 2024 Wicks (Original Author of AuroraDB)
@@ -21,12 +25,6 @@ SOFTWARE.
 
 */
 
-
-
-
-
-
-#pragma once
 
 #include <iostream>      
 #include <string>        
