@@ -82,36 +82,159 @@ private:
     //----------------------------------------------------------------------------------------------------------------------------------------------
 
     inline void load(const string &file) {
-        std::ifstream inputFile(file); // Opens file in "read" mode.
+        std::ifstream inputFile(file); // Opens file in "read" mode..
         if (!inputFile) {
-            // If file doesn't exist, just return silently
+            // If file doesn't exist, js return silently..
             return;
         }
 
         string line;
-        current_tag = "default"; // Reset to default tag
+        current_tag = "default"; // Reset to default tag.
 
-        // First, look for the tag
+        // First, look for the tag.
         while (std::getline(inputFile, line)) {
             if (line.substr(0, 12) == "<AuroraDB::") {
-                // Extract tag name between <AuroraDB::-  and -> 
+                // Extract tag name between <AuroraDB::-  and -> .
                 size_t start = line.find("-") + 2;
                 size_t end = line.find(">", start);
                 if (start != string::npos && end != string::npos) {
                     current_tag = line.substr(start, end - start); //Set the current_tag to the tag.
                 }
             } else if (!line.empty()) {
-                // Parse username and password
+                // Parse username and password.
                 std::istringstream iss(line);
                 string username, password;
                 if (iss >> username >> password) {
-                    // Store with tag
+                    // Store with tag.
                     db[current_tag + ":" + username] = password;
                 }
             }
         }
     }
 
+    inline void save(const string &filename) {
+        std::ofstream outfile(filename, std::ios::out | std::ios::trunc); // Open file in "out" mode and truncate.
+
+        if (!outfile.is_open()) {
+            throw std::runtime_error("Error opening file for saving.");
+        }
+
+        // Group users by their database tag.
+        std::unordered_map<string, std::vector<std::pair<string, string>>> tagged_users;
+
+        for (const auto &pair : db) {
+            size_t tag_separator = pair.first.find(':');  // Split the key into tag and username.
+
+            if (tag_separator != string::npos) {
+                string tag = pair.first.substr(0, tag_separator);
+                string username = pair.first.substr(tag_separator + 1);
+                tagged_users[tag].emplace_back(username, pair.second);
+            }
+        }
+
+        // Write each database tag group.
+        for (const auto &tag_group : tagged_users) {
+            // Write tag at the beginning of the user list.
+            outfile << "<AuroraDB::" << tag_group.first << "> -\n";
+    
+            // Write users in this tag group.
+            for (const auto &user : tag_group.second) {
+                outfile << user.first << " " << user.second << "\n";
+            }
+
+            outfile << "</AuroraDB>\n\n"; 
+        }
+
+        outfile.flush();  // Flush.
+        outfile.close(); // Close the file.
+    }
+
+     //----------------------------------------------------------------------------------------------------------------------------------------------
+
+    string GetCurrentTime() {
+
+        std::time_t currentTime = std::time(nullptr); //Get current time.
+    
+        std::tm* localTime = std::localtime(&currentTime); // Convert to local.
+    
+
+        char buffer[80]; //Declare an buffer.
+        std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", localTime); // Convert to string format
+    
+        return string(buffer);
+    }
+
+    
+
+
+
+
+    void WriteToLog(const std::string &message) {
+        std::ofstream outfile("storage/log.txt", std::ios::out | std::ios::app);  // Open the file in append mode
+
+        if (!outfile.is_open()) {
+            throw std::runtime_error("Error opening file for saving.");
+        }
+
+        outfile << GetCurrentTime() << " [AuroraDB] " << message << "\n";
+    }
+
+
+    //----------------------------------------------------------------------------------------------------------------------------------------------
+
+    string ExeMethod(const string& name, const string& password, const string& method, const string& tag) {
+        try {
+            if (method == "get") { //If method is get, run method.
+                return get(name, password);  
+            } else if (method == "set") { //If method is set, run method.
+                return set(name, password);
+            } else if (method == "set" && tag != "") { //If method is set and dose have a tag, run it with the tag.
+                return set(tag, name, password);
+            } else if (method == "compare") { //If method is compare, run it.
+                return compare(name, password);
+            } else {
+                ERROR_MSG("Unknown method: " + method); //If unknown method, warn user.
+                return "-1";
+            }
+        } catch (const std::exception& e) { //If unexpected exception, throw error message.
+            ERROR_MSG(e.what());
+            return "-1";
+        }
+    }
+
+    inline void thread(const string &function, const string &name, const string &password) {
+        std::vector<std::thread> threads;
+        try {
+            if (function == "get") {
+                threads.push_back(std::thread([this, &name]() {
+                    this->get(name);
+                }));
+            } else if (function == "set") {
+                threads.push_back(std::thread([this, &name, &password]() {
+                    this->set(name, password);
+                }));
+            } else if (function == "rm") {
+                threads.push_back(std::thread([this, &name]() {
+                this->rm(name);
+            }));
+            } else if (function == "compare") {
+                threads.push_back(std::thread([this, &name, &password]() {
+                    this->compare(name, password);
+                }));
+            } else {
+                throw std::runtime_error("Unknown thread function");
+            }
+
+            for (auto &t : threads) {
+                t.join();
+            }
+        } catch (const std::exception& e) {
+            cerr << "Thread error: " << e.what() << "\n";
+        }
+    }
+
+    
+    //----------------------------------------------------------------------------------------------------------------------------------------------
     
 
 public:
@@ -121,8 +244,7 @@ public:
     } Options;
     // --- Work in progress ---
 
-    // Constructor and destructor remain the same
-    AuroraDB() {
+    AuroraDB() { //Contructor (Runs every time you call the database).
         try {
             tags["default"] = true;
             
@@ -132,7 +254,7 @@ public:
         }
     }
 
-    ~AuroraDB() {
+    ~AuroraDB() { //Destructor (Runs every time the database stops).
         try {
             save("storage/storage.txt");
         } catch (const std::runtime_error &e) {
@@ -145,22 +267,97 @@ public:
     //--WORK IN PROGRESS, DONT RUN--
     int FrontEndMode() {
         try {
-            #include <gtkmm.h>
-
-            auto app = Gtk::Application::create("AuroraDB"); //Create the application..
+            #include <gtkmm.h> //Include the GUI library
+            
+            auto app = Gtk::Application::create("AuroraDB"); //Create the application.
 
             class AuroraDBWindow : public Gtk::Window {
-            
             private:
             
+            AuroraDB& db;  // Reference to the database instance.
+            
+            //  ---- UI Components ----
+            Gtk::Box m_mainBox{Gtk::Orientation::VERTICAL, 10}; //set up the main box.
+            Gtk::Label m_titleLabel{"AuroraDB Management"}; //Set up the title
+            
+            // ---- User Input ----
+            Gtk::Box m_inputBox{Gtk::Orientation::VERTICAL, 5}; //Make the box for the entrys.
+            Gtk::Entry m_usernameEntry, m_passwordEntry, m_tagEntry; //Make entrys.
+            Gtk::ComboBoxText m_actionCombo;
+            Gtk::Button m_executeButton{"Execute"};
+            
+            // ---- Output -----
+            Gtk::TextView m_outputView;
+            Glib::RefPtr<Gtk::TextBuffer> m_outputBuffer;
+
+            void init_ui() {
+                // Config main window.
+                set_title("AuroraDB Management");  //Set title
+                set_default_size(400, 600); //Set  size.
+
+                // -- Setup input entries --
+                m_usernameEntry.set_placeholder_text("Username"); 
+                m_passwordEntry.set_placeholder_text("Password");
+                m_passwordEntry.set_visibility(false);
+                m_tagEntry.set_placeholder_text("Tag (optional)");
+
+                // -- Setup the actions --
+                m_actionCombo.append("set", "Add User");
+                m_actionCombo.append("get", "Get User");
+                m_actionCombo.append("rm", "Remove User");
+                m_actionCombo.append("compare", "Compare Password");
+
+                // -- Setup Layout --
+                m_inputBox.append(m_titleLabel);
+                m_inputBox.append(m_actionCombo);
+                m_inputBox.append(m_usernameEntry);
+                m_inputBox.append(m_passwordEntry);
+                m_inputBox.append(m_tagEntry);
+                m_inputBox.append(m_executeButton);
+
+                // -- Setup output view.
+                m_outputBuffer = Gtk::TextBuffer::create();
+                m_outputView.set_buffer(m_outputBuffer);
+                m_inputBox.append(m_outputView);
+
+                // -- Setup the butonn press --
+                m_executeButton.signal_clicked().connect(sigc::mem_fun(*this, &AuroraDBWindow::on_execute));
+
+                // Set the main child.
+                set_child(m_inputBox);
             }
 
-            
-        } catch (const std::runtime_error &e) {
-            cerr << "Error loading frontend: " << e.what() << "\n";
-        }
-        
+            int on_execute() {
+                std::string action = m_actionCombo.get_active_id();
+                std::string username = m_usernameEntry.get_text();
+                std::string password = m_passwordEntry.get_text();
+                std::string tag = m_tagEntry.get_text();
+
+                string output;
+
+                output = ExeMethod(username, password, action, tag) ;
+                }
+                    
+                    
+        public:
+            AuroraDBWindow(AuroraDB& database) : db(database) {
+                init_ui;
+            }
+        };
+
+        // Create window and run application.
+        auto window = std::make_shared<AuroraDBWindow>(*this);
+        app->run(*window);
+
+        return 0;
+    } 
+    catch (const std::runtime_error &e) {
+        cerr << "Error loading frontend: " << e.what() << "\n";
+        return -1;
     }
+    }
+
+     //----------------------------------------------------------------------------------------------------------------------------------------------
 
     int InterfaceMode() {
         string action, username, password;
@@ -333,20 +530,21 @@ public:
     }
 
     //-----------------------------------------------------------------------------------------------------------------------------------------------
-    void set(const string tag, const string &username, const string &password) {
+    string set(const string tag, const string &username, const string &password) {
         if (tags.find(tag) == tags.end()) {
             ERROR_MSG("Tag doesn't exist, please create it using addTag()");
+            return "-6";
         }
         
         if (username.empty() || std::all_of(username.begin(), username.end(), ::isspace)) { // Prevent empty or whitespace only usernames.
             cerr << "Error: Username cannot be empty\n";
-            return;
+            return "-2";
         }
 
         for (const auto& entry : db) { //Check for every tag.
             if (entry.first.substr(entry.first.find(':') + 1) == username) { //if entry exist under the same tag,
                 cerr << "Error: Username already exists in database\n"; //Throw error.
-                return;
+                return "-3";
             }
         }
 
@@ -356,7 +554,9 @@ public:
         
         db[tag + ":" + username] = hash(password);   
         
-        cout << "Database: User added: " << username << "\n";  // Write to log.
+        cout << "Database: User added: " << username << "\n";  //Write out to user.
+
+        return "Database: User added: " + username + "\n";
         
     }
 
@@ -370,10 +570,10 @@ public:
 
     
 
-    int get(const string &username) {
+    string get(const string &username) {
         if (username.empty()) {
             cerr << "Error: Username cannot be empty\n";
-            return -1;
+            return "-1";
         } 
         shared_lock<std::shared_mutex> lock(db_mutex);
     
@@ -383,7 +583,7 @@ public:
             if (entry.first.substr(entry.first.find(':') + 1) == username) {
                 WriteToLog(string("GET " + username + " 0 "));
                 cout << "User: " << entry.first << ":" << entry.second << "\n";
-                return 0;
+                return "User: " + entry.first + ":" + entry.second + "\n";
             }
         }
 
@@ -428,16 +628,17 @@ public:
                 return false;
             }
         }
+        cout << "User not found: " << username << "\n";  //Print out result to user.
+        return false; 
     }
 
-    cout << "User not found: " << username << "\n";  //Print out result to user.
-    return false; 
-}
+    
 
-    void rm(const string &username) {
+
+    string rm(const string &username) {
         if (username.empty()) {
             cerr << "Error: Username cannot be empty\n";
-            return;
+            return "-1";
         }
 
         unique_lock<std::shared_mutex> lock(db_mutex); // Locks the db.
@@ -458,14 +659,17 @@ public:
     
         if (userRemoved) {
             cout << "User removed: " << username << "\n";  //Print out result to user.
+            return "User removed: " + username + "\n";
         } else {
             cout << "User not found: " << username << "\n";  //Print out result to user.
+            return "User not found: " + username + "\n";
         }
     }
 };
 
+ //----------------------------------------------------------------------------------------------------------------------------------------------
 
-    
+
 // Database supports multiple different solutions, both command line arguments, networking, interactive command line menu and you can write commands under here: 
 // Threading is being worked on!
 // Have fun, greetings Wicks.
