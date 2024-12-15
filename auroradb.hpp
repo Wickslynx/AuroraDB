@@ -638,23 +638,26 @@ public:
 
         shared_lock<std::shared_mutex> lock(db_mutex);
         for (const auto& entry : db) {
-         if (entry.first.substr(entry.first.find(':') + 1) == username) { // Check if the entry's key ends with the given username.
-            if (entry.second == hash(password)) { // Compare the hashed password.
-                cout << "Password matched for user: " << username << "\n"; //Print out result to user.
-                return true;
-            } else {
-                cout << "No match found for user: " << username << "\n";  //Print out result to user.
-                return false;
+             if (entry.first.substr(entry.first.find(':') + 1) == username) { // Check if the entry's key ends with the given username.
+                if (entry.second == hash(password)) { // Compare the hashed password.
+                    cout << "Password matched for user: " << username << "\n"; //Print out result to user.
+                    return true;
+                } else {
+                    cout << "No match found for user: " << username << "\n";  //Print out result to user.
+                    return false;
+                }
             }
+            
+            cout << "User not found: " << username << "\n";  //Print out result to user.
+            return false; 
         }
-        cout << "User not found: " << username << "\n";  //Print out result to user.
-        return false; 
+
     }
 
     
 
 
-    string rm(const string &username) {
+    std::string rm(const string &username) {
         if (username.empty()) {
             cerr << "Error: Username cannot be empty\n";
             return "-1";
