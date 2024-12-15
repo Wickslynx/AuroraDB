@@ -215,6 +215,7 @@ private:
             ERROR_MSG(e.what()); 
             return std::string("Error: ") + e.what(); 
         } 
+    }
 
     inline void thread(const string &function, const string &name, const string &password) {
         std::vector<std::thread> threads;
