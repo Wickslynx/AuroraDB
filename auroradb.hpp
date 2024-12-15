@@ -307,6 +307,7 @@ public:
             Glib::RefPtr<Gtk::TextBuffer> m_outputBuffer;
 
             void init_ui() {
+                cout << "Checkpoint Line 309";
                 // Config main window.
                 set_title("AuroraDB Management");  //Set title
                 set_default_size(400, 600); //Set  size.
@@ -343,7 +344,11 @@ public:
                 set_child(m_inputBox);
             }
 
+           
+
             int on_execute() {
+                
+                cout << "Checkpoint Line 349";
                 std::string action = m_actionCombo.get_active_id();
                 std::string username = m_usernameEntry.get_text();
                 std::string password = m_passwordEntry.get_text();
@@ -369,6 +374,7 @@ public:
 
             #define AuroraDB_INTERNAL_FRONTEND
             return 0;
+            
             } 
         catch (const std::runtime_error &e) {
             cerr << "Error loading frontend: " << e.what() << "\n";
