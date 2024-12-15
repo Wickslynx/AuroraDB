@@ -151,7 +151,7 @@ private:
 
      //----------------------------------------------------------------------------------------------------------------------------------------------
 
-    string GetCurrentTime() {
+    inline string GetCurrentTime() {
 
         std::time_t currentTime = std::time(nullptr); //Get current time.
     
@@ -169,7 +169,7 @@ private:
 
 
 
-    void WriteToLog(const std::string &message) {
+    inline void WriteToLog(const std::string &message) {
         std::ofstream outfile("storage/log.txt", std::ios::out | std::ios::app);  // Open the file in append mode
 
         if (!outfile.is_open()) {
