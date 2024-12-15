@@ -191,25 +191,30 @@ private:
 
     //----------------------------------------------------------------------------------------------------------------------------------------------
 
-    string ExeMethod(const string& name, const string& password, const string& method, const string& tag) {
-        try {
-            if (method == "get") { //If method is get, run method.
-                return get(name, password);  
-            } else if (method == "set") { //If method is set, run method.
-                return set(name, password);
-            } else if (method == "set" && tag != "") { //If method is set and dose have a tag, run it with the tag.
+    inline std::string ExeMethod(const std::string& name, const std::string& password, const std::string& method, const std::string& tag) {
+        
+        try { 
+            if (method == "get") { 
+                return get(name);
+            } else if (method == "set" && tag.empty()) {
+                return set(name, password); 
+            } else if (method == "set" && !tag.empty()) { 
                 return set(tag, name, password);
-            } else if (method == "compare") { //If method is compare, run it.
-                return compare(name, password);
-            } else {
-                ERROR_MSG("Unknown method: " + method); //If unknown method, warn user.
-                return "-1";
-            }
-        } catch (const std::exception& e) { //If unexpected exception, throw error message.
-            ERROR_MSG(e.what());
-            return "-1";
-        }
-    }
+            } else if (method == "compare") { 
+                if (compare(name, password) == true) {
+                    return "Name and Password matched.";
+                } else {
+                    return "Name and Password did not match any exsisting user";
+                }
+            } else if (method == "rm") { 
+                return rm(name); 
+            } else { 
+                ERROR_MSG("Unknown method: " + method); 
+                return "Error: Unknown method: " + method; } 
+        } catch (const std::exception& e) { 
+            ERROR_MSG(e.what()); 
+            return std::string("Error: ") + e.what(); 
+        } 
 
     inline void thread(const string &function, const string &name, const string &password) {
         std::vector<std::thread> threads;
