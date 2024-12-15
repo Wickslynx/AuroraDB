@@ -507,7 +507,7 @@ public:
                 tag = (argc > 4) ? argv[4] : "";              // Assign tag to argv[4] if argc == 4.
 
                if (cmd == "get" && argc > 2) {
-                    std::cout << (get(name) << "\n";
+                    std::cout << get(name) << "\n";
                } else if (cmd == "set" && argc == 3) {
                     set(name, password);
                 } else if (cmd == "set" && argc == 4) {
@@ -607,7 +607,7 @@ public:
         }
 
         cout << "Error: User not found\n";
-        return -2;
+        return "-2";
     }
 
      //-----------------------------------------------------------------------------------------------------------------------------------------------
