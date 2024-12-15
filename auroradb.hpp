@@ -276,6 +276,7 @@ public:
     //--WORK IN PROGRESS, DONT RUN--
     int FrontEndMode() {
         try {
+            #ifdef AURORADB_INTERNAL_FRONTEND 
             #include <gtkmm.h> //Include the GUI library
             
             auto app = Gtk::Application::create("AuroraDB"); //Create the application.
@@ -357,7 +358,10 @@ public:
         // Create window and run application.
         auto window = std::make_shared<AuroraDBWindow>(*this);
         app->run(*window);
+            
+        #endif 
 
+        #define AuroraDB_INTERNAL_FRONTEND
         return 0;
     } 
     catch (const std::runtime_error &e) {
