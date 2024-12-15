@@ -372,7 +372,7 @@ public:
             
             #endif 
 
-            #define AuroraDB_INTERNAL_FRONTEND
+            #define AURORADB_INTERNAL_FRONTEND
             return 0;
             
             } 
