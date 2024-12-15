@@ -358,22 +358,22 @@ public:
         public:
             AuroraDBWindow(AuroraDB& database) : db(database) {
                 init_ui;
-            }
-        };
+                }
+            };
 
-        // Create window and run application.
-        auto window = std::make_shared<AuroraDBWindow>(*this);
-        app->run(*window);
+            // Create window and run application.
+            auto window = std::make_shared<AuroraDBWindow>(*this);
+            app->run(*window);
             
-        #endif 
+            #endif 
 
-        #define AuroraDB_INTERNAL_FRONTEND
-        return 0;
-    } 
-    catch (const std::runtime_error &e) {
-        cerr << "Error loading frontend: " << e.what() << "\n";
-        return -1;
-    }
+            #define AuroraDB_INTERNAL_FRONTEND
+            return 0;
+            } 
+        catch (const std::runtime_error &e) {
+            cerr << "Error loading frontend: " << e.what() << "\n";
+            return -1;
+        }
     }
 
      //----------------------------------------------------------------------------------------------------------------------------------------------
@@ -582,8 +582,8 @@ public:
 
 
 
-    void set(const string &username, const string &password) { 
-        set("default", username, password); //Set the tag to default tag.
+    string set(const string &username, const string &password) { 
+        return set("default", username, password); //Set the tag to default tag.
     }
 
 
