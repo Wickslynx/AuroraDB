@@ -279,117 +279,12 @@ public:
 
     //----------------------------------------------------------------------------------------------------------------------------------------------
 
-    //--WORK IN PROGRESS, DONT RUN--
-    int FrontEndMode() {
-        try {
-            #ifdef AURORADB_INTERNAL_FRONTEND 
-            #include <gtkmm.h> //Include the GUI library
-            
-            auto app = Gtk::Application::create("AuroraDB"); //Create the application.
-
-            class AuroraDBWindow : public Gtk::Window {
-            private:
-            
-            AuroraDB& db;  // Reference to the database instance.
-            
-            //  ---- UI Components ----
-            Gtk::Box m_mainBox{Gtk::Orientation::VERTICAL, 10}; //set up the main box.
-            Gtk::Label m_titleLabel{"AuroraDB Management"}; //Set up the title
-            
-            // ---- User Input ----
-            Gtk::Box m_inputBox{Gtk::Orientation::VERTICAL, 5}; //Make the box for the entrys.
-            Gtk::Entry m_usernameEntry, m_passwordEntry, m_tagEntry; //Make entrys.
-            Gtk::ComboBoxText m_actionCombo;
-            Gtk::Button m_executeButton{"Execute"};
-            
-            // ---- Output -----
-            Gtk::TextView m_outputView;
-            Glib::RefPtr<Gtk::TextBuffer> m_outputBuffer;
-
-            void init_ui() {
-                cout << "Checkpoint Line 309";
-                // Config main window.
-                set_title("AuroraDB Management");  //Set title
-                set_default_size(400, 600); //Set  size.
-
-                // -- Setup input entries --
-                m_usernameEntry.set_placeholder_text("Username"); 
-                m_passwordEntry.set_placeholder_text("Password");
-                m_passwordEntry.set_visibility(false);
-                m_tagEntry.set_placeholder_text("Tag (optional)");
-
-                // -- Setup the actions --
-                m_actionCombo.append("set", "Add User");
-                m_actionCombo.append("get", "Get User");
-                m_actionCombo.append("rm", "Remove User");
-                m_actionCombo.append("compare", "Compare Password");
-
-                // -- Setup Layout --
-                m_inputBox.append(m_titleLabel);
-                m_inputBox.append(m_actionCombo);
-                m_inputBox.append(m_usernameEntry);
-                m_inputBox.append(m_passwordEntry);
-                m_inputBox.append(m_tagEntry);
-                m_inputBox.append(m_executeButton);
-
-                // -- Setup output view.
-                m_outputBuffer = Gtk::TextBuffer::create();
-                m_outputView.set_buffer(m_outputBuffer);
-                m_inputBox.append(m_outputView);
-
-                // -- Setup the butonn press --
-                m_executeButton.signal_clicked().connect(sigc::mem_fun(*this, &AuroraDBWindow::on_execute));
-
-                // Set the main child.
-                set_child(m_inputBox);
-            }
-
-           
-
-            int on_execute() {
-                
-                cout << "Checkpoint Line 349";
-                std::string action = m_actionCombo.get_active_id();
-                std::string username = m_usernameEntry.get_text();
-                std::string password = m_passwordEntry.get_text();
-                std::string tag = m_tagEntry.get_text();
-
-                string output;
-
-                output = ExeMethod(username, password, action, tag) ;
-                }
-                    
-                    
-        public:
-            AuroraDBWindow(AuroraDB& database) : db(database) {
-                init_ui;
-                }
-            };
-
-            // Create window and run application.
-            auto window = std::make_shared<AuroraDBWindow>(*this);
-            app->run(*window);
-            
-            #endif 
-
-            #define AURORADB_INTERNAL_FRONTEND
-            return 0;
-            
-            } 
-        catch (const std::runtime_error &e) {
-            cerr << "Error loading frontend: " << e.what() << "\n";
-            return -1;
-        }
-    }
-
-     //----------------------------------------------------------------------------------------------------------------------------------------------
-
     int InterfaceMode() {
         string action, username, password;
         printAuroraDB();
         cout << "Welcome to AuroraDB!" << "\n";
         while (true) {
-            cout << "\n\nPlease enter which of following actions you want to do \n (1) Set user. (2) Remove user. (3) Get user. (4). Compare user. (5) Quit : "; //Welcome message.
+            cout << "\n\nPlease enter which of following actions you want to do \n (1) Set element. (2) Remove element. (3) Get element. (4). Compare element. (5) Quit : "; //Welcome message.
             cin >> action;
 
             if (action != "5" && action != "4" && action != "3" && action != "2" && action != "1") {
