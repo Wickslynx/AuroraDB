@@ -366,12 +366,12 @@ public:
                 break; // Connection closed or error.
             }
 
-            buffer[bytesReceived] = '\0'; // Null-terminate the received data.
+            buffer[bytesReceived] = '\0'; // Null-term the received data.
 
             std::string command, name, password;
             std::istringstream stream(buffer);
             
-            if (!(stream >> command >> name >> password)) {
+            if (!(stream >> command >> name >> password)) { //If the stream is not in the right order, throw error.
                 ERROR_MSG("Invalid command format");
                 continue;
             }
@@ -408,30 +408,30 @@ public:
                 tag = (argc > 4) ? argv[4] : "";              // Assign tag to argv[4] if argc == 4.
 
                if (cmd == "get" && argc > 2) {
-                    std::cout << get(name) << "\n";
-               } else if (cmd == "set" && argc == 3) {
+                    std::cout << get(name) << "\n"; //Execute the right method.
+               } else if (cmd == "set" && argc == 3) {//Execute the right method.
                     set(name, password);
-                } else if (cmd == "set" && argc == 4) {
+                } else if (cmd == "set" && argc == 4) { //Execute the right method.
                     set(tag, name, password);
-                } else if (cmd == "rm" && argc > 2) {
+                } else if (cmd == "rm" && argc > 2) { //Execute the right method.
                     rm(name);
-                } else if (cmd == "compare" && argc > 3) {
+                } else if (cmd == "compare" && argc > 3) { //Execute the right method.
                     compare(name, password);
                 } else {
-                    throw std::runtime_error("Error: Must use (set (Name, Password), get (Name), rm (Name), compare (Name, Password))");
+                    throw std::runtime_error("Error: Must use (set (Name, Password), get (Name), rm (Name), compare (Name, Password))"); //Invalid arg count for the command.
                 }
             } catch (std::runtime_error &e) {
-                std::cerr << "Error: Argument not recognised: " << e.what() << "\n";
+                std::cerr << "Error: Argument not recognised: " << e.what() << "\n"; // Command not reqonised.
             }
-        } else if (argc >= 5) { // Ensure the comparison is clear for arguments exceeding limit.
-            std::cerr << "Error: Arguments exceeding limit, maximum of three arguments.\n";
+        } else if (argc >= 5) { // Make sure that its not over the limit.
+            std::cerr << "Error: Arguments exceeding limit, maximum of four arguments.\n";
         } else {
             std::cout << "No command line arguments given. Total arguments: " << argc << std::endl;
         }
     }
 
 
-    void addTag(const string& tag) {
+    void addElement(const string& tag) {
         
         if (tag.empty() || std::all_of(tag.begin(), tag.end(), ::isspace)) {
             cerr << "Error: Tag cannot be empty\n"; //If empty of whitespace.
