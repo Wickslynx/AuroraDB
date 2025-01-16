@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
   
   db.cmdArgs(argc, argv); //Takes in cmd args.
   
-  db.InteractiveMode(); //Starts an interactive menu.
+  db.InterfaceMode(); //Starts an interactive menu.
 
   return 0;
 }
